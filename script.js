@@ -7,25 +7,23 @@ let currentCardIndex = 0;
 const cardImage = document.getElementById("cardImage");
 const nextButton = document.getElementById("nextButton");
 const restartButton = document.getElementById("restartButton");
-const statusTable = document.getElementById("statusTable");
+const holeHeader = document.getElementById("holeHeader");
+const checkmarkRow = document.getElementById("checkmarkRow");
 
 // Initialize the status table with "Hole 1" to "Hole 18"
 function initStatusTable() {
-    const headerRow = document.querySelector("thead tr");
+    // Create the hole headers
     for (let i = 0; i < 18; i++) {
         const holeCell = document.createElement("th");
         holeCell.textContent = `Hole ${i + 1}`;
-        headerRow.appendChild(holeCell);
+        holeHeader.appendChild(holeCell);
     }
 
     // Create a row for the status check marks
-    const statusRow = document.createElement("tr");
     for (let i = 0; i < 18; i++) {
         const statusCell = document.createElement("td");
-        statusRow.appendChild(statusCell);
+        checkmarkRow.appendChild(statusCell);
     }
-
-    statusTable.appendChild(statusRow);
 }
 
 // Shuffle the deck
@@ -50,8 +48,7 @@ function showNextCard() {
 
 // Update completion status in the table
 function updateCompletionStatus(index) {
-    const statusRow = statusTable.rows[0];
-    const statusCell = statusRow.cells[index];
+    const statusCell = checkmarkRow.cells[index];
     statusCell.innerHTML = '<span class="checkmark">✔️</span>';
 }
 
@@ -65,9 +62,8 @@ function restartDeck() {
 
 // Reset all completion statuses
 function resetCompletionStatus() {
-    const statusRow = statusTable.rows[0];
-    for (let i = 0; i < statusRow.cells.length; i++) {
-        statusRow.cells[i].innerHTML = ''; // Clear all check marks
+    for (let i = 0; i < checkmarkRow.cells.length; i++) {
+        checkmarkRow.cells[i].innerHTML = ''; // Clear all check marks
     }
 }
 
