@@ -23,7 +23,7 @@ body {
     height: auto;
     max-height: 90vh;
     object-fit: contain;
-    border: 2px solid #fff; /* White border around the image */
+    border: 2px solid #000; /* White border around the image */
 }
 
 .buttons {
