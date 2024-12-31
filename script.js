@@ -1,4 +1,4 @@
-// Array holding the card images (from card1.jpg to card18.jpg)
+// Array holding the card images (from card1.png to card18.png)
 const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
 let shuffledDeck = shuffleDeck([...cards]);
 let currentCardIndex = 0;
@@ -9,20 +9,23 @@ const nextButton = document.getElementById("nextButton");
 const restartButton = document.getElementById("restartButton");
 const statusTable = document.getElementById("statusTable");
 
-// Initialize the status table
+// Initialize the status table with "Hole 1" to "Hole 18"
 function initStatusTable() {
+    const headerRow = document.querySelector("thead tr");
     for (let i = 0; i < 18; i++) {
-        const row = document.createElement("tr");
-        const holeCell = document.createElement("td");
-        const statusCell = document.createElement("td");
-
+        const holeCell = document.createElement("th");
         holeCell.textContent = `Hole ${i + 1}`;
-        statusCell.innerHTML = ''; // Initially, no check marks.
-
-        row.appendChild(holeCell);
-        row.appendChild(statusCell);
-        statusTable.appendChild(row);
+        headerRow.appendChild(holeCell);
     }
+
+    // Create a row for the status check marks
+    const statusRow = document.createElement("tr");
+    for (let i = 0; i < 18; i++) {
+        const statusCell = document.createElement("td");
+        statusRow.appendChild(statusCell);
+    }
+
+    statusTable.appendChild(statusRow);
 }
 
 // Shuffle the deck
@@ -47,8 +50,8 @@ function showNextCard() {
 
 // Update completion status in the table
 function updateCompletionStatus(index) {
-    const row = statusTable.rows[index];
-    const statusCell = row.cells[1];
+    const statusRow = statusTable.rows[0];
+    const statusCell = statusRow.cells[index];
     statusCell.innerHTML = '<span class="checkmark">✔️</span>';
 }
 
@@ -62,9 +65,9 @@ function restartDeck() {
 
 // Reset all completion statuses
 function resetCompletionStatus() {
-    const rows = statusTable.rows;
-    for (let i = 0; i < rows.length; i++) {
-        rows[i].cells[1].innerHTML = ''; // Clear all check marks
+    const statusRow = statusTable.rows[0];
+    for (let i = 0; i < statusRow.cells.length; i++) {
+        statusRow.cells[i].innerHTML = ''; // Clear all check marks
     }
 }
 
