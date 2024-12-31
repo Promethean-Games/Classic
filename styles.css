@@ -51,7 +51,7 @@ body {
 /* Table Styles */
 .completion-table {
     margin-top: 30px;
-    width: 80%;
+    width: 50%;
 }
 
 table {
@@ -62,7 +62,7 @@ table {
 th, td {
     padding: 10px;
     border: 1px solid #fff;
-    text-align: center;
+    text-align: left;
 }
 
 th {
