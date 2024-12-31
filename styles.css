@@ -7,11 +7,13 @@
 body {
     font-family: Arial, sans-serif;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
     background-color: #000; /* Black background */
     color: white; /* White text color */
+    text-align: center;
 }
 
 .app-container {
@@ -23,7 +25,7 @@ body {
     height: auto;
     max-height: 90vh;
     object-fit: contain;
-    border: 2px solid #000; /* White border around the image */
+    border: 5px solid #fff; /* White border around the image */
 }
 
 .buttons {
@@ -37,7 +39,7 @@ body {
     cursor: pointer;
     border: none;
     border-radius: 5px;
-    background-color: #d11111; /* Red background */
+    background-color: #d32f2f; /* Red background */
     color: white; /* White text */
     transition: background-color 0.3s;
 }
@@ -46,4 +48,32 @@ body {
     background-color: #b71c1c; /* Darker red on hover */
 }
 
+/* Table Styles */
+.completion-table {
+    margin-top: 30px;
+    width: 50%;
+}
 
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #fff;
+    text-align: left;
+}
+
+th {
+    background-color: #444;
+}
+
+td {
+    background-color: #333;
+}
+
+.checkmark {
+    color: #4CAF50; /* Green check mark color */
+    font-size: 20px;
+}
