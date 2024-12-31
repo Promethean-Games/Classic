@@ -10,7 +10,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f4f4f4;
+    background-color: #000;
 }
 
 .app-container {
@@ -36,7 +36,7 @@ body {
     cursor: pointer;
     border: none;
     border-radius: 5px;
-    background-color: #444;
+    background-color: #d11111;
     color: #fff;
     transition: background-color 0.3s;
 }
