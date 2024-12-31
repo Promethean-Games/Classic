@@ -1,5 +1,5 @@
 // Array holding the card images (from card1.jpg to card18.jpg)
-const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.jpg`);
+const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
 let shuffledDeck = shuffleDeck([...cards]);
 let currentCardIndex = 0;
 
