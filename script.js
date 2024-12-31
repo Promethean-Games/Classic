@@ -1,5 +1,5 @@
-// Array holding the card images (from card1.jpg to card18.jpg)
-const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.jpg`);
+// Array holding the card images (from card1.png to card18.png)
+const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
 let shuffledDeck = shuffleDeck([...cards]);
 let currentCardIndex = 0;
 
@@ -23,7 +23,7 @@ function showNextCard() {
         cardImage.src = shuffledDeck[currentCardIndex];
         currentCardIndex++;
     } else {
-        alert("You've gone through all the cards!");
+        alert("GAME OVER");
     }
 }
 
@@ -40,5 +40,3 @@ restartButton.addEventListener("click", restartDeck);
 
 // Initialize by showing the first card
 showNextCard();
-
-
