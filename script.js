@@ -21,6 +21,7 @@ const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
 let shuffledDeck = shuffleDeck([...cards]);
 let currentCardIndex = 0;
 
+// Shuffle the deck
 function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -29,7 +30,7 @@ function shuffleDeck(deck) {
     return deck;
 }
 
-// Add player
+// Add a new player
 addPlayerButton.addEventListener("click", () => {
     const input = document.createElement("input");
     input.type = "text";
@@ -38,7 +39,7 @@ addPlayerButton.addEventListener("click", () => {
     playerInputs.appendChild(input);
 });
 
-// Start game
+// Start the game
 startGameButton.addEventListener("click", () => {
     players = [...document.querySelectorAll(".player-name")].map(input => input.value || "Player");
     scores = players.map(() => Array(18).fill(0));
@@ -48,19 +49,19 @@ startGameButton.addEventListener("click", () => {
     showNextCard();
 });
 
-// Show next card
+// Show the next card
 function showNextCard() {
     if (currentCardIndex < shuffledDeck.length) {
         cardImage.src = shuffledDeck[currentCardIndex];
         currentCardIndex++;
-        currentHole++;
+        currentHole = currentCardIndex; // Sync currentHole with currentCardIndex
         updateScoreTable();
     } else {
         alert("You've completed all the cards!");
     }
 }
 
-// Update score table
+// Update the score table
 function updateScoreTable() {
     const table = document.createElement("table");
     table.innerHTML = `
@@ -77,9 +78,9 @@ function updateScoreTable() {
                     <td>${player}</td>
                     <td>
                         <div class="score-adjust-buttons">
-                            <button onclick="adjustScore(${i}, ${currentHole - 1}, -1)">-1</button>
-                            ${scores[i][currentHole - 1]}
-                            <button onclick="adjustScore(${i}, ${currentHole - 1}, 1)">+1</button>
+                            <button onclick="adjustScore(${i}, ${currentHole - 1}, -1)">-</button>
+                            <span>${scores[i][currentHole - 1]}</span>
+                            <button onclick="adjustScore(${i}, ${currentHole - 1}, 1)">+</button>
                         </div>
                     </td>
                     <td>${scores[i].reduce((sum, score) => sum + score, 0)}</td>
@@ -91,13 +92,13 @@ function updateScoreTable() {
     scoreContainer.appendChild(table);
 }
 
-// Adjust score
+// Adjust the score
 function adjustScore(playerIndex, holeIndex, change) {
     scores[playerIndex][holeIndex] += change;
     updateScoreTable();
 }
 
-// Restart deck
+// Restart the deck
 restartButton.addEventListener("click", () => {
     resetPrompt.style.display = "block";
     gameContainer.style.display = "none";
@@ -125,5 +126,3 @@ function initialize() {
     showNextCard();
 }
 initialize();
-
-
