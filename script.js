@@ -45,6 +45,9 @@ startGameButton.addEventListener("click", () => {
     scores = players.map(() => Array(18).fill(0));
     mainMenu.style.display = "none";
     gameContainer.style.display = "block";
+    currentCardIndex = 0;
+    currentHole = 1;
+    shuffledDeck = shuffleDeck([...cards]);
     updateScoreTable();
     showNextCard();
 });
@@ -54,7 +57,7 @@ function showNextCard() {
     if (currentCardIndex < shuffledDeck.length) {
         cardImage.src = shuffledDeck[currentCardIndex];
         currentCardIndex++;
-        currentHole = currentCardIndex; // Sync currentHole with currentCardIndex
+        currentHole = currentCardIndex; // Update currentHole
         updateScoreTable();
     } else {
         alert("You've completed all the cards!");
@@ -68,7 +71,7 @@ function updateScoreTable() {
         <thead>
             <tr>
                 <th>Player</th>
-                <th>Hole ${currentHole}</th>
+                ${Array.from({ length: currentHole }, (_, i) => `<th>Hole ${i + 1}</th>`).join("")}
                 <th>Total</th>
             </tr>
         </thead>
@@ -76,13 +79,15 @@ function updateScoreTable() {
             ${players.map((player, i) => `
                 <tr>
                     <td>${player}</td>
-                    <td>
-                        <div class="score-adjust-buttons">
-                            <button onclick="adjustScore(${i}, ${currentHole - 1}, -1)">-</button>
-                            <span>${scores[i][currentHole - 1]}</span>
-                            <button onclick="adjustScore(${i}, ${currentHole - 1}, 1)">+</button>
-                        </div>
-                    </td>
+                    ${Array.from({ length: currentHole }, (_, j) => `
+                        <td>
+                            <div class="score-adjust-buttons">
+                                <button onclick="adjustScore(${i}, ${j}, -1)">-</button>
+                                <span>${scores[i][j]}</span>
+                                <button onclick="adjustScore(${i}, ${j}, 1)">+</button>
+                            </div>
+                        </td>
+                    `).join("")}
                     <td>${scores[i].reduce((sum, score) => sum + score, 0)}</td>
                 </tr>
             `).join("")}
@@ -112,11 +117,13 @@ keepPlayersButton.addEventListener("click", () => {
     updateScoreTable();
     resetPrompt.style.display = "none";
     gameContainer.style.display = "block";
+    showNextCard();
 });
 
 clearAllButton.addEventListener("click", () => {
     players = [];
     scores = [];
+    playerInputs.innerHTML = ""; // Clear player input fields
     mainMenu.style.display = "block";
     resetPrompt.style.display = "none";
 });
