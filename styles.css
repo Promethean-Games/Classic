@@ -14,7 +14,7 @@ body {
 }
 
 .menu-container, .app-container, .reset-container {
-    width: 90%;
+    width: 100%;
     max-width: 600px;
     text-align: center;
 }
@@ -36,7 +36,7 @@ h1, h2 {
 }
 
 .btn:hover {
-    background-color: #b71c1c;
+    background-color: #7f0b0b;
 }
 
 .card-image {
@@ -74,4 +74,29 @@ input.player-name {
     background-color: #d11111;
     color: white;
 }
+
+.score-adjust-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.score-adjust-buttons button {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+    background-color: #d11111;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.score-adjust-buttons button:hover {
+    background-color: #7f0b0b;
+}
+
 
