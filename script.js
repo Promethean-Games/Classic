@@ -40,5 +40,3 @@ restartButton.addEventListener("click", restartDeck);
 
 // Initialize by showing the first card
 showNextCard();
-
-
