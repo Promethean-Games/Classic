@@ -1,4 +1,7 @@
-// Array holding the card images (from card1.jpg to card18.jpg) const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.jpg`); let shuffledDeck = shuffleDeck([...cards]); let currentCardIndex = 0;
+// Array holding the card images (from card1.png to card18.png)
+const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
+let shuffledDeck = shuffleDeck([...cards]);
+let currentCardIndex = 0;
 
 // Elements
 const mainMenu = document.getElementById("mainMenu");
@@ -13,11 +16,6 @@ const scoreContainer = document.getElementById("scoreContainer");
 const resetPrompt = document.getElementById("resetPrompt");
 const keepPlayersButton = document.getElementById("keepPlayersButton");
 const clearAllButton = document.getElementById("clearAllButton");
-
-// Deck logic
-const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
-let shuffledDeck = shuffleDeck([...cards]);
-let currentCardIndex = 0;
 
 // Shuffle the deck
 function shuffleDeck(deck) {
@@ -50,7 +48,16 @@ startGameButton.addEventListener("click", () => {
     showNextCard();
 });
 
-// Show next card function showNextCard() { if (currentCardIndex < shuffledDeck.length) { cardImage.src = shuffledDeck[currentCardIndex]; currentCardIndex++; currentHole++; updateScoreTable(); } else { alert("You've completed all the cards!"); } }
+// Show next card function 
+showNextCard() { 
+    if (currentCardIndex < shuffledDeck.length) {
+      cardImage.src = shuffledDeck[currentCardIndex]; 
+      currentCardIndex++; 
+      currentHole++; updateScoreTable(); 
+    } else { 
+     alert("You've completed all the cards!"); 
+    }
+}
 
 // Update the score table
 function updateScoreTable() {
@@ -128,6 +135,7 @@ function initialize() {
     showNextCard();
 }
 initialize();
+
 
 
 
