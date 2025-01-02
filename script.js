@@ -131,6 +131,10 @@ clearAllButton.addEventListener("click", () => {
     gameContainer.style.display = "none";
 });
 
+// Event Listeners
+nextButton.addEventListener("click", showNextCard);
+restartButton.addEventListener("click", restartDeck);
+
 // Initialize first card
 function initialize() {
     showNextCard();
