@@ -1,7 +1,6 @@
-// Array holding the card images (from card1.png to card18.png)
-const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
-let shuffledDeck = shuffleDeck([...cards]);
-let currentCardIndex = 0;
+let players = [];
+let scores = [];
+let currentHole = 1;
 
 // Elements
 const mainMenu = document.getElementById("mainMenu");
@@ -16,6 +15,11 @@ const scoreContainer = document.getElementById("scoreContainer");
 const resetPrompt = document.getElementById("resetPrompt");
 const keepPlayersButton = document.getElementById("keepPlayersButton");
 const clearAllButton = document.getElementById("clearAllButton");
+
+// Deck logic
+const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
+let shuffledDeck = shuffleDeck([...cards]);
+let currentCardIndex = 0;
 
 // Shuffle the deck
 function shuffleDeck(deck) {
@@ -38,7 +42,7 @@ addPlayerButton.addEventListener("click", () => {
 // Start the game
 startGameButton.addEventListener("click", () => {
     players = [...document.querySelectorAll(".player-name")].map(input => input.value || "Player");
-    scores = players.map(() => Array(18).fill(0));
+    scores = players.map(() => Array(18).fill(0)); // Reset scores
     mainMenu.style.display = "none";
     gameContainer.style.display = "block";
     currentCardIndex = 0;
@@ -56,7 +60,7 @@ function showNextCard() {
         currentHole = currentCardIndex; // Update currentHole
         updateScoreTable();
     } else {
-        alert("Game Over!");
+        alert("You've completed all the cards!");
     }
 }
 
@@ -99,18 +103,18 @@ function adjustScore(playerIndex, holeIndex, change) {
     updateScoreTable();
 }
 
-// Restart the deck (shuffle and reset)
-function restartDeck() {
-    shuffledDeck = shuffleDeck([...cards]);
-    currentCardIndex = 0;
-    showNextCard();
-}
+// Restart the deck
+restartButton.addEventListener("click", () => {
+    resetPrompt.style.display = "block";
+    gameContainer.style.display = "none";
+});
 
 // Reset prompt buttons
 keepPlayersButton.addEventListener("click", () => {
     shuffledDeck = shuffleDeck([...cards]);
     currentCardIndex = 0;
     currentHole = 1;
+    scores = players.map(() => Array(18).fill(0)); // Reset scores to zero
     updateScoreTable();
     resetPrompt.style.display = "none";
     gameContainer.style.display = "block";
@@ -125,15 +129,9 @@ clearAllButton.addEventListener("click", () => {
     resetPrompt.style.display = "none";
 });
 
-// Event Listeners
-nextButton.addEventListener("click", showNextCard);
-restartButton.addEventListener("click", restartDeck);
-
 // Initialize first card
 function initialize() {
     showNextCard();
 }
 initialize();
-
-
 
