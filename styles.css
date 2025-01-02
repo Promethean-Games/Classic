@@ -30,7 +30,7 @@ button {
     cursor: pointer;
 }
 
-.btn {
+btn {
     padding: 10px 20px;
     margin: 10px;
     font-size: 16px;
