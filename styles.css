@@ -17,6 +17,12 @@ body {
     text-align: center;
 }
 
+#cardContainer img {
+    width: 100%;
+    height: auto;
+    margin: 20px auto;
+    display: block;
+
 .card-image {
     width: 100%;
     height: auto;
@@ -44,3 +50,16 @@ body {
 .btn:hover {
     background-color: #7f0b0b;
 }
+
+#scoreTable {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 80%;
+}
+
+#scoreTable th, #scoreTable td {
+    border: 1px solid white;
+    padding: 10px;
+    text-align: center;
+}
+
