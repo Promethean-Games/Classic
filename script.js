@@ -48,8 +48,8 @@ startGameButton.addEventListener("click", () => {
     showNextCard();
 });
 
-// Show next card function 
-showNextCard() { 
+// Show next card 
+function showNextCard() { 
     if (currentCardIndex < shuffledDeck.length) {
       cardImage.src = shuffledDeck[currentCardIndex]; 
       currentCardIndex++; 
