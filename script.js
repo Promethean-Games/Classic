@@ -1,6 +1,7 @@
-let players = [];
-let scores = [];
-let currentHole = 1;
+// Array holding the card images (from card1.png to card18.png)
+const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
+let shuffledDeck = shuffleDeck([...cards]);
+let currentCardIndex = 0;
 
 // Elements
 const mainMenu = document.getElementById("mainMenu");
@@ -133,3 +134,6 @@ function initialize() {
     showNextCard();
 }
 initialize();
+
+
+
