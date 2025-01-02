@@ -134,4 +134,3 @@ function initialize() {
     showNextCard();
 }
 initialize();
-
