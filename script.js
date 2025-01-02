@@ -52,17 +52,7 @@ startGameButton.addEventListener("click", () => {
     showNextCard();
 });
 
-// Show the next card
-function showNextCard() {
-    if (currentCardIndex < shuffledDeck.length) {
-        cardImage.src = shuffledDeck[currentCardIndex];
-        currentCardIndex++;
-        currentHole = currentCardIndex; // Update currentHole
-        updateScoreTable();
-    } else {
-        alert("You've completed all the cards!");
-    }
-}
+// Show next card function showNextCard() { if (currentCardIndex < shuffledDeck.length) { cardImage.src = shuffledDeck[currentCardIndex]; currentCardIndex++; currentHole++; updateScoreTable(); } else { alert("You've completed all the cards!"); } }
 
 // Update the score table
 function updateScoreTable() {
