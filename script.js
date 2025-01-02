@@ -17,11 +17,6 @@ const resetPrompt = document.getElementById("resetPrompt");
 const keepPlayersButton = document.getElementById("keepPlayersButton");
 const clearAllButton = document.getElementById("clearAllButton");
 
-// Deck logic
-const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
-let shuffledDeck = shuffleDeck([...cards]);
-let currentCardIndex = 0;
-
 // Shuffle the deck
 function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
@@ -61,7 +56,7 @@ function showNextCard() {
         currentHole = currentCardIndex; // Update currentHole
         updateScoreTable();
     } else {
-        alert("You've completed all the cards!");
+        alert("Game Over!");
     }
 }
 
@@ -104,11 +99,12 @@ function adjustScore(playerIndex, holeIndex, change) {
     updateScoreTable();
 }
 
-// Restart the deck
-restartButton.addEventListener("click", () => {
-    resetPrompt.style.display = "block";
-    gameContainer.style.display = "none";
-});
+// Restart the deck (shuffle and reset)
+function restartDeck() {
+    shuffledDeck = shuffleDeck([...cards]);
+    currentCardIndex = 0;
+    showNextCard();
+}
 
 // Reset prompt buttons
 keepPlayersButton.addEventListener("click", () => {
@@ -128,6 +124,10 @@ clearAllButton.addEventListener("click", () => {
     mainMenu.style.display = "block";
     resetPrompt.style.display = "none";
 });
+
+// Event Listeners
+nextButton.addEventListener("click", showNextCard);
+restartButton.addEventListener("click", restartDeck);
 
 // Initialize first card
 function initialize() {
