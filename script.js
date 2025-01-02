@@ -31,19 +31,21 @@ function shuffleDeck(deck) {
 addPlayerButton.addEventListener("click", () => {
     const playerInput = document.createElement("input");
     playerInput.type = "text";
-    playerInput.placeholder = `Player ${players.length + 1}`;
+    playerInput.placeholder = `Player ${playerInputs.childElementCount + 1}`;
     playerInputs.appendChild(playerInput);
 });
 
 startGameButton.addEventListener("click", () => {
     const playerInputsList = playerInputs.querySelectorAll("input");
-    players = Array.from(playerInputsList).map(input => input.value || `Player ${players.length + 1}`);
+    players = Array.from(playerInputsList).map((input, index) => input.value || `Player ${index + 1}`);
     scores = players.map(() => Array(18).fill(0));
     shuffledDeck = shuffleDeck([...cards]);
     currentCardIndex = 0;
     currentHole = 1;
+
     updateScoreTable();
     showNextCard();
+
     mainMenu.style.display = "none";
     gameContainer.style.display = "block";
 });
@@ -68,6 +70,7 @@ keepPlayersButton.addEventListener("click", () => {
     currentHole = 1;
     scores = players.map(() => Array(18).fill(0));
     updateScoreTable();
+
     resetPrompt.style.display = "none";
     gameContainer.style.display = "block";
     showNextCard();
@@ -118,4 +121,5 @@ function updateScoreTable() {
     });
 }
 
+// Initialize with resetPrompt hidden
 resetPrompt.style.display = "none";
