@@ -105,6 +105,7 @@ function adjustScore(playerIndex, holeIndex, change) {
 
 // Restart the deck
 restartButton.addEventListener("click", () => {
+    console.log("Restart button clicked");
     resetPrompt.style.display = "block";
     gameContainer.style.display = "none";
 });
@@ -127,6 +128,7 @@ clearAllButton.addEventListener("click", () => {
     playerInputs.innerHTML = ""; // Clear player input fields
     mainMenu.style.display = "block";
     resetPrompt.style.display = "none";
+    gameContainer.style.display = "none";
 });
 
 // Initialize first card
@@ -134,3 +136,5 @@ function initialize() {
     showNextCard();
 }
 initialize();
+
+
