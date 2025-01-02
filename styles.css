@@ -1,4 +1,9 @@
-/* General styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -12,25 +17,19 @@ body {
     text-align: center;
 }
 
-
-#cardContainer img {
-    width: 300px;
-    height: 400px;
-    margin: 20px auto;
-    display: block;
+.card-image {
+    width: 100%;
+    height: auto;
+    max-height: 90vh;
+    object-fit: contain;
 }
 
-button {
+.buttons {
+    margin-top: 20px;
     background-color: #d11111;
-    color: white;
-    padding: 10px 20px;
-    margin: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
 }
 
-btn {
+.btn {
     padding: 10px 20px;
     margin: 10px;
     font-size: 16px;
@@ -42,21 +41,6 @@ btn {
     transition: background-color 0.3s;
 }
 
-
-button:hover {
+.btn:hover {
     background-color: #7f0b0b;
 }
-
-#scoreTable {
-    margin: 20px auto;
-    border-collapse: collapse;
-    width: 80%;
-}
-
-#scoreTable th, #scoreTable td {
-    border: 1px solid white;
-    padding: 10px;
-    text-align: center;
-}
-
-
