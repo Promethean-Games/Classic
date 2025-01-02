@@ -86,8 +86,12 @@ clearAllButton.addEventListener("click", () => {
 function showNextCard() {
     if (currentCardIndex < shuffledDeck.length) {
         cardImage.src = shuffledDeck[currentCardIndex];
+        currentCardIndex++;
+    } else {
+        alert("GAME OVER");
     }
 }
+
 
 function updateScoreTable() {
     playerNamesRow.innerHTML = players.map(player => `<th>${player}</th>`).join("");
