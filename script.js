@@ -1,3 +1,4 @@
+// Elements
 const mainMenu = document.getElementById("mainMenu");
 const gameContainer = document.getElementById("gameContainer");
 const playerInputs = document.getElementById("playerInputs");
@@ -12,13 +13,14 @@ const cardImage = document.getElementById("cardImage");
 const scoreTable = document.getElementById("scoreTable");
 const playerNamesRow = document.getElementById("playerNamesRow");
 const currentHoleScoresRow = document.getElementById("currentHoleScoresRow");
+const cards = Array.from({ length: 18 }, (_, i) => `card${i + 1}.png`);
 
 let players = [];
 let scores = [];
-let shuffledDeck = [];
+let shuffledDeck = shuffleDeck([...cards]);
 let currentCardIndex = 0;
 let currentHole = 1;
-const cards = Array.from({ length: 18 }, (_, i) => `card${i + 1}.png`);
+
 
 function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
@@ -31,23 +33,21 @@ function shuffleDeck(deck) {
 addPlayerButton.addEventListener("click", () => {
     const playerInput = document.createElement("input");
     playerInput.type = "text";
-    playerInput.placeholder = `Player ${playerInputs.childElementCount + 1}`;
+    playerInput.placeholder = `Player ${players.length + 1}`;
     playerInputs.appendChild(playerInput);
 });
 
 startGameButton.addEventListener("click", () => {
     const playerInputsList = playerInputs.querySelectorAll("input");
-    players = Array.from(playerInputsList).map((input, index) => input.value || `Player ${index + 1}`);
+    players = Array.from(playerInputsList).map(input => input.value || `Player ${players.length + 1}`);
     scores = players.map(() => Array(18).fill(0));
-    shuffledDeck = shuffleDeck([...cards]);
-    currentCardIndex = 0;
-    currentHole = 1;
-
-    updateScoreTable();
-    showNextCard();
-
     mainMenu.style.display = "none";
     gameContainer.style.display = "block";
+    currentCardIndex = 0;
+    currentHole = 1;
+    shuffledDeck = shuffleDeck([...cards]);
+    updateScoreTable();
+    showNextCard();
 });
 
 nextCardButton.addEventListener("click", () => {
@@ -70,7 +70,6 @@ keepPlayersButton.addEventListener("click", () => {
     currentHole = 1;
     scores = players.map(() => Array(18).fill(0));
     updateScoreTable();
-
     resetPrompt.style.display = "none";
     gameContainer.style.display = "block";
     showNextCard();
@@ -121,5 +120,6 @@ function updateScoreTable() {
     });
 }
 
-// Initialize with resetPrompt hidden
 resetPrompt.style.display = "none";
+
+
