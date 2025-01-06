@@ -4,39 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Par for the Course - Classic</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin: 5px;
+            width: 80%;
+            max-width: 300px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        button {
+            background-color: #d11111;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:active {
+            background-color: #a10e0e;
+        }
+
+        .image-container {
+            margin: 20px 0;
+        }
+
+        .score-table {
+            margin: 20px auto;
+            width: 90%;
+            max-width: 400px;
+            border-collapse: collapse;
+        }
+
+        .score-table th, .score-table td {
+            border: 1px solid white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .score-table th {
+            background-color: #d11111;
+        }
+
+    </style>
 </head>
 <body>
-    <div id="mainMenu" class="menu-container">
-        <h1>Welcome to Par for the Course - Classic!</h1>
-	<h3>Enter player names below to begin</h3>
-	    <br>
-	    <br>
-	    <h5>This project is in beta. If you encounter an error, delete your browser history and cookies for this site and reload the page.</h5>
-	    <h6>v0.1.4</h6>
-	
-        <div id="playerInputs">
-            <input type="text" class="player-name" placeholder="Player Name">
+    <div class="container" id="home-screen">
+        <h1>Par for the Course - Classic</h1>
+        <p>Enter player names:</p>
+        <div id="player-inputs">
+            <input type="text" placeholder="Player 1" maxlength="20">
+            <input type="text" placeholder="Player 2" maxlength="20">
         </div>
-        <button id="addPlayerButton" class="btn">Add Player</button>
-        <button id="startGameButton" class="btn">Start!</button>
-    </div>
-<div>
-	<a href="https://promethean-games.github.io/Teed-Off/">Tee'd Off</a>
-</div>
-    <div id="gameContainer" class="app-container" style="display: none;">
-        <img id="cardImage" class="card-image" src="images/card1.png" alt="Card Image">
-        <div class="buttons">
-            <button id="nextButton" class="btn">Next Card</button>
-            <button id="restartButton" class="btn">Restart Deck</button>
-        </div>
-
-     <div id="resetPrompt" style="display: none;">
-        <p>Would you like to keep the current players or start fresh?</p>
-        <button id="keepPlayersButton">Keep Players</button>
-        <button id="clearAllButton">Clear All</button>
+        <button onclick="startGame()">Start Game</button>
     </div>
 
-    <script src="script.js"></script>
+    <div class="container" id="game-screen" style="display: none;">
+        <div class="image-container">
+            <img id="current-image" src="" alt="Card" style="max-width: 90%; height: auto;">
+        </div>
+        <button onclick="previousCard()">Previous Card</button>
+        <button onclick="nextCard()">Next Card</button>
+        <button onclick="restartGame()">Restart</button>
+
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="score-table-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const images = Array.from({ length: 18 }, (_, i) => `Images/card${i + 1}.png`);
+        let currentIndex = 0;
+        let players = [];
+
+        function startGame() {
+            const playerInputs = document.querySelectorAll('#player-inputs input');
+            players = Array.from(playerInputs).map(input => ({
+                name: input.value || `Player ${input.placeholder.split(' ')[1]}`,
+                score: 0
+            }));
+
+            if (players.length > 0) {
+                document.getElementById('home-screen').style.display = 'none';
+                document.getElementById('game-screen').style.display = 'block';
+                updateImage();
+                renderScoreTable();
+            }
+        }
+
+        function updateImage() {
+            const imageElement = document.getElementById('current-image');
+            imageElement.src = images[currentIndex];
+        }
+
+        function nextCard() {
+            currentIndex = Math.floor(Math.random() * images.length);
+            updateImage();
+        }
+
+        function previousCard() {
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            updateImage();
+        }
+
+        function restartGame() {
+            const clearAll = confirm("Do you want to clear all names and scores?");
+
+            if (clearAll) {
+                location.reload();
+            } else {
+                players.forEach(player => player.score = 0);
+                renderScoreTable();
+            }
+        }
+
+        function renderScoreTable() {
+            const tableBody = document.getElementById('score-table-body');
+            tableBody.innerHTML = '';
+
+            players.forEach((player, index) => {
+                const row = document.createElement('tr');
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = player.name;
+                row.appendChild(nameCell);
+
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = player.score;
+                row.appendChild(scoreCell);
+
+                const actionsCell = document.createElement('td');
+                const addButton = document.createElement('button');
+                addButton.textContent = '+1';
+                addButton.onclick = () => updateScore(index, 1);
+
+                const subtractButton = document.createElement('button');
+                subtractButton.textContent = '-1';
+                subtractButton.onclick = () => updateScore(index, -1);
+
+                actionsCell.appendChild(addButton);
+                actionsCell.appendChild(subtractButton);
+                row.appendChild(actionsCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateScore(index, delta) {
+            players[index].score += delta;
+            renderScoreTable();
+        }
+    </script>
 </body>
 </html>
