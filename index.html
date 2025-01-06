@@ -1,188 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Par for the Course - Classic</title>
-    <style>
-        body {
-            background-color: black;
-            color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Par for the Course - Classic</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        .container {
-            text-align: center;
-            padding: 20px;
-        }
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-        h1 {
-            margin-bottom: 20px;
-        }
+    /* Image Styling */
+    #logo {
+      width: 200px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
 
-        input[type="text"] {
-            padding: 10px;
-            margin: 5px;
-            width: 80%;
-            max-width: 300px;
-            border: none;
-            border-radius: 5px;
-            outline: none;
-        }
+    /* Player Input Styles */
+    #player-setup {
+      max-width: 400px;
+      text-align: center;
+    }
 
-        button {
-            background-color: #d11111;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+    #player-inputs {
+      margin-bottom: 20px;
+    }
 
-        button:active {
-            background-color: #a10e0e;
-        }
+    .player-input {
+      margin-bottom: 10px;
+    }
 
-        .image-container {
-            margin: 20px 0;
-        }
+    .player-input input {
+      width: calc(100% - 20px);
+      padding: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
 
-        .score-table {
-            margin: 20px auto;
-            width: 90%;
-            max-width: 400px;
-            border-collapse: collapse;
-        }
+    /* Button Styles */
+    .btn {
+      padding: 10px 15px;
+      background-color: #d11111;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
 
-        .score-table th, .score-table td {
-            border: 1px solid white;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .score-table th {
-            background-color: #d11111;
-        }
-
-    </style>
+    .btn:hover {
+      background-color: #a50e0e;
+    }
+  </style>
 </head>
 <body>
-    <div class="container" id="home-screen">
-        <h1>Par for the Course - Classic</h1>
-        <p>Enter player names:</p>
-        <div id="player-inputs">
-            <input type="text" placeholder="Player 1" maxlength="20">
-            <input type="text" placeholder="Player 2" maxlength="20">
-        </div>
-        <button onclick="startGame()">Start Game</button>
+  <!-- Logo -->
+  <img id="logo" src="Images/PftC-Logo-2025.png" alt="Par for the Course Logo">
+    <h1>Welcome to Par for the Course - Classic!</h1>
+    <h4>This project is in beta</h4>
+    <h6>v 0.6.1</h6>
+
+  <!-- Player Setup Section -->
+  <div id="player-setup">
+    <h2>Enter Player Names</h2>
+    <div id="player-inputs">
+      <!-- Player inputs will be dynamically added here -->
     </div>
+    <button id="add-player-btn" class="btn">Add Player</button>
+    <button id="start-game-btn" class="btn">Start Game</button>
+  </div>
 
-    <div class="container" id="game-screen" style="display: none;">
-        <div class="image-container">
-            <img id="current-image" src="" alt="Card" style="max-width: 90%; height: auto;">
-        </div>
-        <button onclick="previousCard()">Previous Card</button>
-        <button onclick="nextCard()">Next Card</button>
-        <button onclick="restartGame()">Restart</button>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const playerInputsContainer = document.getElementById("player-inputs");
+      const addPlayerButton = document.getElementById("add-player-btn");
+      const startGameButton = document.getElementById("start-game-btn");
 
-        <table class="score-table">
-            <thead>
-                <tr>
-                    <th>Player</th>
-                    <th>Score</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="score-table-body"></tbody>
-        </table>
-    </div>
+      // Function to create a new player input
+      const addPlayerInput = () => {
+        const playerCount = playerInputsContainer.children.length + 1;
+        const playerInput = document.createElement("div");
+        playerInput.classList.add("player-input");
+        playerInput.innerHTML = `
+          <input type="text" maxlength="20" placeholder="Player ${playerCount}" class="player-name" />
+        `;
+        playerInputsContainer.appendChild(playerInput);
+      };
 
-    <script>
-        const images = Array.from({ length: 18 }, (_, i) => `Images/card${i + 1}.png`);
-        let currentIndex = 0;
-        let players = [];
+      // Automatically add the first player input on page load
+      addPlayerInput();
 
-        function startGame() {
-            const playerInputs = document.querySelectorAll('#player-inputs input');
-            players = Array.from(playerInputs).map(input => ({
-                name: input.value || `Player ${input.placeholder.split(' ')[1]}`,
-                score: 0
-            }));
+      // Event listener to add new player input fields
+      addPlayerButton.addEventListener("click", addPlayerInput);
 
-            if (players.length > 0) {
-                document.getElementById('home-screen').style.display = 'none';
-                document.getElementById('game-screen').style.display = 'block';
-                updateImage();
-                renderScoreTable();
-            }
+      // Event listener for starting the game
+      startGameButton.addEventListener("click", function () {
+        const playerNames = Array.from(
+          document.querySelectorAll(".player-name")
+        ).map((input) => input.value.trim() || input.placeholder);
+
+        if (playerNames.length === 0) {
+          alert("Please add at least one player.");
+          return;
         }
 
-        function updateImage() {
-            const imageElement = document.getElementById('current-image');
-            imageElement.src = images[currentIndex];
-        }
-
-        function nextCard() {
-            currentIndex = Math.floor(Math.random() * images.length);
-            updateImage();
-        }
-
-        function previousCard() {
-            currentIndex = (currentIndex - 1 + images.length) % images.length;
-            updateImage();
-        }
-
-        function restartGame() {
-            const clearAll = confirm("Do you want to clear all names and scores?");
-
-            if (clearAll) {
-                location.reload();
-            } else {
-                players.forEach(player => player.score = 0);
-                renderScoreTable();
-            }
-        }
-
-        function renderScoreTable() {
-            const tableBody = document.getElementById('score-table-body');
-            tableBody.innerHTML = '';
-
-            players.forEach((player, index) => {
-                const row = document.createElement('tr');
-
-                const nameCell = document.createElement('td');
-                nameCell.textContent = player.name;
-                row.appendChild(nameCell);
-
-                const scoreCell = document.createElement('td');
-                scoreCell.textContent = player.score;
-                row.appendChild(scoreCell);
-
-                const actionsCell = document.createElement('td');
-                const addButton = document.createElement('button');
-                addButton.textContent = '+1';
-                addButton.onclick = () => updateScore(index, 1);
-
-                const subtractButton = document.createElement('button');
-                subtractButton.textContent = '-1';
-                subtractButton.onclick = () => updateScore(index, -1);
-
-                actionsCell.appendChild(addButton);
-                actionsCell.appendChild(subtractButton);
-                row.appendChild(actionsCell);
-
-                tableBody.appendChild(row);
-            });
-        }
-
-        function updateScore(index, delta) {
-            players[index].score += delta;
-            renderScoreTable();
-        }
-    </script>
+        // Start the game logic (implement this based on your requirements)
+        console.log("Players:", playerNames);
+        startGame(playerNames); // Replace this with your game-start logic
+      });
+    });
+  </script>
 </body>
 </html>
