@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Par for the Course - Classic</title>
   <style>
-    /* General Styles */
     body {
       font-family: Arial, sans-serif;
       background-color: #000;
@@ -17,19 +16,12 @@
       align-items: center;
     }
 
-    h2 {
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    /* Image Styling */
     #logo {
       width: 200px;
       margin-top: 20px;
       margin-bottom: 20px;
     }
 
-    /* Player Input Styles */
     #player-setup {
       max-width: 400px;
       text-align: center;
@@ -47,10 +39,8 @@
       width: calc(100% - 20px);
       padding: 8px;
       font-size: 16px;
-      box-sizing: border-box;
     }
 
-    /* Button Styles */
     .btn {
       padding: 10px 15px;
       background-color: #d11111;
@@ -68,22 +58,17 @@
   </style>
 </head>
 <body>
-  <!-- Logo -->
-  <img id="logo" src="Images/PftC-Logo-2025.png" alt="Par for the Course Logo">
-    <h1>Welcome to Par for the Course - Classic!</h1>
-    <h4>This project is in beta</h4>
-    <h6>v 0.6.2</h6>
-
-  <!-- Player Setup Section -->
+  <img id="logo" src="images/PftC-Logo-2025.png" alt="Par for the Course Logo">
+  <h1>Welcome to Par for the Course - Classic!</h1>
+  <h4>This project is in beta</h4>
+  <h6>v 0.6.3</h6>
+  
   <div id="player-setup">
     <h2>Enter Player Names</h2>
-    <div id="player-inputs">
-      <!-- Player inputs will be dynamically added here -->
-    </div>
+    <div id="player-inputs"></div>
     <button id="add-player-btn" class="btn">Add Player</button>
     <button id="start-game-btn" class="btn">Start Game</button>
   </div>
-
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const playerInputsContainer = document.getElementById("player-inputs");
@@ -118,13 +103,15 @@
           return;
         }
 
-        // Start the game logic (implement this based on your requirements)
+        // Example of game logic to replace placeholder functionality
+        alert("Game started with players: " + playerNames.join(", "));
         console.log("Players:", playerNames);
-        startGame(playerNames); // Replace this with your game-start logic
       });
     });
   </script>
-<a align=center href="https://promethean-games.github.io/tournament"/>Tournament</a>
+  <br>
+    <br>
+  <a align=center href="https://promethean-games.github.io/tournament"/>Tournament</a>
   <a align=center href="https://promethean-games.github.io/Teed-Off/"/>Tee'd Off</a>
 </body>
 </html>
