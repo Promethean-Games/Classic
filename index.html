@@ -17,7 +17,8 @@
     }
 
     #logo {
-      width: 200px;
+      width: 100%;
+      height: auto;
       margin-top: 20px;
       margin-bottom: 20px;
     }
@@ -81,10 +82,10 @@
   </style>
 </head>
 <body>
-  <img id="logo" src="Images/PftC-Logo-2025.png" alt="Par for the Course Logo">
+  <img id="logo" src="images/PftC-Logo-2025.png" alt="Par for the Course Logo">
    <h1>Welcome to Par for the Course - Classic!</h1>
   <h4>This project is in beta</h4>
-  <h6>v 0.6.4</h6>
+  <h6>v 0.6.5</h6>
   <div id="player-setup">
     <h2>Enter Player Names</h2>
     <div id="player-inputs"></div>
@@ -117,7 +118,7 @@
 
       let playerScores = [];
       let currentCardIndex = 0;
-      const cards = Array.from({ length: 18 }, (_, i) => `Images/card${i + 1}.png`);
+      const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
 
       const addPlayerInput = () => {
         const playerCount = playerInputsContainer.children.length + 1;
@@ -216,8 +217,6 @@
       nextCardButton.addEventListener("click", nextCard);
       restartButton.addEventListener("click", restartGame);
 
-      addPlayerInput(); // Initialize with one player input
-    });
   </script>
 </body>
 </html>
