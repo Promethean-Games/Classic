@@ -17,7 +17,7 @@
     }
 
     #logo {
-      width: 100%;
+      width: 400px;
       height: auto;
       margin-top: 20px;
       margin-bottom: 20px;
@@ -59,6 +59,8 @@
 
     #card-display {
       margin-top: 20px;
+      width: 100%;
+      height: auto;
     }
 
     #scoring-table {
@@ -85,7 +87,7 @@
   <img id="logo" src="images/PftC-Logo-2025.png" alt="Par for the Course Logo">
    <h1>Welcome to Par for the Course - Classic!</h1>
   <h4>This project is in beta</h4>
-  <h6>v 0.6.5</h6>
+  <h6>v 0.6.6</h6>
   <div id="player-setup">
     <h2>Enter Player Names</h2>
     <div id="player-inputs"></div>
@@ -95,7 +97,7 @@
 
   <div id="game-area" style="display: none;">
     <h2>Game Area</h2>
-    <img id="card-display" src="" alt="Card Image" style="max-width: 100%; height: auto;">
+    <img id="card-display" src="images/card${i + 1}.png" alt="Card Image" style="max-width: 100%; height: auto;">
     <div>
       <button id="prev-card-btn" class="btn">Previous Card</button>
       <button id="next-card-btn" class="btn">Next Card</button>
