@@ -17,7 +17,7 @@
     }
 
     #logo {
-      width: 400px;
+      width: 300px;
       height: auto;
       margin-top: 20px;
       margin-bottom: 20px;
@@ -87,7 +87,7 @@
   <img id="logo" src="images/PftC-Logo-2025.png" alt="Par for the Course Logo">
    <h1>Welcome to Par for the Course - Classic!</h1>
   <h4>This project is in beta</h4>
-  <h6>v 0.6.6</h6>
+  <h6>v 0.6.7</h6>
   <div id="player-setup">
     <h2>Enter Player Names</h2>
     <div id="player-inputs"></div>
@@ -106,119 +106,134 @@
     <div id="scoring-table"></div>
   </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const playerInputsContainer = document.getElementById("player-inputs");
-      const addPlayerButton = document.getElementById("add-player-btn");
-      const startGameButton = document.getElementById("start-game-btn");
-      const gameArea = document.getElementById("game-area");
-      const cardDisplay = document.getElementById("card-display");
-      const prevCardButton = document.getElementById("prev-card-btn");
-      const nextCardButton = document.getElementById("next-card-btn");
-      const restartButton = document.getElementById("restart-btn");
-      const scoringTable = document.getElementById("scoring-table");
+ <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const playerInputsContainer = document.getElementById("player-inputs");
+  const addPlayerButton = document.getElementById("add-player-btn");
+  const startGameButton = document.getElementById("start-game-btn");
+  const gameArea = document.getElementById("game-area");
+  const cardDisplay = document.getElementById("card-display");
+  const prevCardButton = document.getElementById("prev-card-btn");
+  const nextCardButton = document.getElementById("next-card-btn");
+  const restartButton = document.getElementById("restart-btn");
+  const scoringTable = document.getElementById("scoring-table");
 
-      let playerScores = [];
-      let currentCardIndex = 0;
-      const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
+  let playerScores = [];
+  let currentCardIndex = 0;
+  const cards = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
 
-      const addPlayerInput = () => {
-        const playerCount = playerInputsContainer.children.length + 1;
-        const playerInput = document.createElement("div");
-        playerInput.classList.add("player-input");
-        playerInput.innerHTML = `
-          <input type="text" maxlength="20" placeholder="Player ${playerCount}" class="player-name" />
-        `;
-        playerInputsContainer.appendChild(playerInput);
-      };
- addPlayerInput();
-      const setupGame = (players) => {
-        gameArea.style.display = "block";
-        document.getElementById("player-setup").style.display = "none";
-        playerScores = players.map((name) => ({ name, score: 0 }));
-        updateScoringTable();
-        loadCard();
-      };
+  const addPlayerInput = () => {
+    const playerCount = playerInputsContainer.children.length + 1;
+    const playerInput = document.createElement("div");
+    playerInput.classList.add("player-input");
+    playerInput.innerHTML = `
+      <input type="text" maxlength="20" placeholder="Player ${playerCount}" class="player-name" />
+    `;
+    playerInputsContainer.appendChild(playerInput);
+  };
 
-      const loadCard = () => {
-        cardDisplay.src = cards[currentCardIndex];
-      };
+  const setupGame = (players) => {
+    gameArea.style.display = "block";
+    document.getElementById("player-setup").style.display = "none";
+    playerScores = players.map((name) => ({ name, score: 0 }));
+    updateScoringTable();
+    loadCard();
+  };
 
-      const updateScoringTable = () => {
-        const table = `
-          <table>
-            <thead>
+  const loadCard = () => {
+    cardDisplay.src = cards[currentCardIndex];
+  };
+
+  const updateScoringTable = () => {
+    const table = `
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Score</th>
+            <th>+1</th>
+            <th>-1</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${playerScores
+            .map(
+              (player, index) => `
               <tr>
-                <th>Player</th>
-                <th>Score</th>
-                <th>+1</th>
-                <th>-1</th>
+                <td>${player.name}</td>
+                <td>${player.score}</td>
+                <td><button class="btn increment" data-index="${index}">+1</button></td>
+                <td><button class="btn decrement" data-index="${index}">-1</button></td>
               </tr>
-            </thead>
-            <tbody>
-              ${playerScores
-                .map(
-                  (player, index) => `
-                <tr>
-                  <td>${player.name}</td>
-                  <td>${player.score}</td>
-                  <td><button class="btn" onclick="updateScore(${index}, 1)">+1</button></td>
-                  <td><button class="btn" onclick="updateScore(${index}, -1)">-1</button></td>
-                </tr>
-              `
-                )
-                .join("")}
-            </tbody>
-          </table>
-        `;
-        scoringTable.innerHTML = table;
-      };
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+    scoringTable.innerHTML = table;
 
-      window.updateScore = (index, delta) => {
-        playerScores[index].score += delta;
-        updateScoringTable();
-      };
+    // Add event listeners for dynamically generated buttons
+    scoringTable.querySelectorAll(".increment").forEach((btn) =>
+      btn.addEventListener("click", (e) =>
+        updateScore(parseInt(e.target.dataset.index), 1)
+      )
+    );
+    scoringTable.querySelectorAll(".decrement").forEach((btn) =>
+      btn.addEventListener("click", (e) =>
+        updateScore(parseInt(e.target.dataset.index), -1)
+      )
+    );
+  };
 
-      const addPlayer = () => addPlayerInput();
-      const startGame = () => {
-        const playerNames = Array.from(document.querySelectorAll(".player-name")).map(
-          (input) => input.value.trim() || input.placeholder
-        );
+  const updateScore = (index, delta) => {
+    playerScores[index].score += delta;
+    updateScoringTable();
+  };
 
-        if (playerNames.length === 0) {
-          alert("Please add at least one player.");
-          return;
-        }
+  const startGame = () => {
+    const playerNames = Array.from(document.querySelectorAll(".player-name")).map(
+      (input) => input.value.trim() || input.placeholder
+    );
 
-        setupGame(playerNames);
-      };
+    if (playerNames.length === 0) {
+      alert("Please add at least one player.");
+      return;
+    }
 
-      const prevCard = () => {
-        currentCardIndex = (currentCardIndex - 1 + cards.length) % cards.length;
-        loadCard();
-      };
+    setupGame(playerNames);
+  };
 
-      const nextCard = () => {
-        currentCardIndex = (currentCardIndex + 1) % cards.length;
-        loadCard();
-      };
+  const prevCard = () => {
+    currentCardIndex = (currentCardIndex - 1 + cards.length) % cards.length;
+    loadCard();
+  };
 
-      const restartGame = () => {
-        const resetAll = confirm("Do you want to clear player names and scores?");
-        if (resetAll) {
-          location.reload();
-        } else {
-          playerScores.forEach((player) => (player.score = 0));
-          updateScoringTable();
-        }
-      };
+  const nextCard = () => {
+    currentCardIndex = (currentCardIndex + 1) % cards.length;
+    loadCard();
+  };
 
-      addPlayerButton.addEventListener("click", addPlayer);
-      startGameButton.addEventListener("click", startGame);
-      prevCardButton.addEventListener("click", prevCard);
-      nextCardButton.addEventListener("click", nextCard);
-      restartButton.addEventListener("click", restartGame);
+  const restartGame = () => {
+    const resetAll = confirm("Do you want to clear player names and scores?");
+    if (resetAll) {
+      location.reload();
+    } else {
+      playerScores.forEach((player) => (player.score = 0));
+      currentCardIndex = 0;
+      updateScoringTable();
+      loadCard();
+    }
+  };
 
-  </script>
+  addPlayerInput(); // Add initial player input
+  addPlayerButton.addEventListener("click", addPlayer);
+  startGameButton.addEventListener("click", startGame);
+  prevCardButton.addEventListener("click", prevCard);
+  nextCardButton.addEventListener("click", nextCard);
+  restartButton.addEventListener("click", restartGame);
+});
+</script>
+
 </body>
 </html>
