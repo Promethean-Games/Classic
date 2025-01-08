@@ -42,21 +42,8 @@
       background-color: #a50e0e;
     }
 
-    #scoreboard {
-      text-align: left;
-      margin-top: 20px;
-    }
-
-    .scoreboard-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 5px 0;
-    }
-
-    .btn-small {
-      padding: 5px 10px;
-      font-size: 12px;
+    #game-area {
+      display: none;
     }
 
     .card-image {
@@ -64,13 +51,34 @@
       max-width: 400px;
       margin: 20px 0;
     }
+
+    #scoreboard {
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      margin: 20px 0;
+      border-collapse: collapse;
+      color: #fff;
+    }
+
+    th, td {
+      border: 1px solid #fff;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #333;
+    }
   </style>
 </head>
 <body>
   <!-- Splash Screen -->
   <div id="splash-screen">
     <img src="images/Splash-Screen.png" alt="Splash Screen">
-    <button id="start-btn" class="btn">Start</button>
+    <button align=center id="start-btn" class="btn">Start</button>
   </div>
 
   <!-- Player Setup Section -->
@@ -84,9 +92,22 @@
   <!-- Game Area Section -->
   <div id="game-area">
     <img id="current-card" class="card-image" src="" alt="Card Image">
-    <div id="scoreboard"></div>
     <button id="next-card-btn" class="btn">Next Card</button>
     <button id="restart-btn" class="btn">Restart</button>
+
+    <!-- Scoreboard -->
+    <div id="scoreboard">
+      <h3>Scoreboard</h3>
+      <table id="score-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script>
@@ -101,17 +122,24 @@
       const nextCardButton = document.getElementById("next-card-btn");
       const restartButton = document.getElementById("restart-btn");
       const currentCardImage = document.getElementById("current-card");
-      const scoreboard = document.getElementById("scoreboard");
+      const scoreTable = document.getElementById("score-table");
 
+      // Array of card image filenames
       const cardImages = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
-      let playerScores = [];
 
+      // Game state variables
+      let playerNames = [];
+      let currentCardIndex = 0;
+      let scores = [];
+
+      // Function to display a random card
       const displayRandomCard = () => {
-        const randomIndex = Math.floor(Math.random() * cardImages.length);
-        currentCardImage.src = cardImages[randomIndex];
-        currentCardImage.alt = `Card ${randomIndex + 1}`;
+        currentCardIndex = Math.floor(Math.random() * cardImages.length);
+        currentCardImage.src = cardImages[currentCardIndex];
+        currentCardImage.alt = `Card ${currentCardIndex + 1}`;
       };
 
+      // Function to add a player input field
       const addPlayerInput = () => {
         const playerCount = playerInputsContainer.children.length + 1;
         const playerDiv = document.createElement("div");
@@ -122,44 +150,59 @@
         playerInputsContainer.appendChild(playerDiv);
       };
 
+      // Function to update the scoreboard
       const updateScoreboard = () => {
-        scoreboard.innerHTML = `<h3>Scoreboard</h3>`;
-        playerScores.forEach((player, index) => {
-          const row = document.createElement("div");
-          row.classList.add("scoreboard-row");
-          row.innerHTML = `
-            <span>${player.name}: ${player.score}</span>
-            <div>
-              <button class="btn-small" data-index="${index}" data-change="1">+1</button>
-              <button class="btn-small" data-index="${index}" data-change="-1">-1</button>
-            </div>
-          `;
-          scoreboard.appendChild(row);
-        });
+        const theadRow = scoreTable.querySelector("thead tr");
+        const tbody = scoreTable.querySelector("tbody");
 
-        document.querySelectorAll(".btn-small").forEach(button => {
-          button.addEventListener("click", function () {
-            const index = parseInt(this.dataset.index, 10);
-            const change = parseInt(this.dataset.change, 10);
-            playerScores[index].score += change;
-            updateScoreboard();
+        // Clear previous rows
+        theadRow.innerHTML = "<th>Player</th>";
+        tbody.innerHTML = "";
+
+        // Add card columns
+        for (let i = 1; i <= scores[0].length; i++) {
+          const th = document.createElement("th");
+          th.textContent = `Hole ${i}`;
+          theadRow.appendChild(th);
+        }
+
+        // Add player rows
+        scores.forEach((playerScores, index) => {
+          const tr = document.createElement("tr");
+
+          // Player name
+          const nameTd = document.createElement("td");
+          nameTd.textContent = playerNames[index];
+          tr.appendChild(nameTd);
+
+          // Scores
+          playerScores.forEach(score => {
+            const td = document.createElement("td");
+            td.textContent = score;
+            tr.appendChild(td);
           });
+
+          tbody.appendChild(tr);
         });
       };
 
+      // Handle Splash Screen Start Button
       startButton.addEventListener("click", function () {
         splashScreen.style.display = "none";
         playerSetup.style.display = "block";
       });
 
+      // Initialize with one player input field
       addPlayerInput();
 
+      // Handle "Add Player" button click
       addPlayerButton.addEventListener("click", function () {
         addPlayerInput();
       });
 
+      // Handle "Start Game" button click
       startGameButton.addEventListener("click", function () {
-        const playerNames = Array.from(playerInputsContainer.querySelectorAll("input"))
+        playerNames = Array.from(playerInputsContainer.querySelectorAll("input"))
           .map(input => input.value.trim())
           .filter(name => name !== "");
 
@@ -168,37 +211,56 @@
           return;
         }
 
-        playerScores = playerNames.map(name => ({ name, score: 0 }));
+        // Initialize scores
+        scores = playerNames.map(() => []);
 
+        // Hide player setup and show game area
         playerSetup.style.display = "none";
         gameArea.style.display = "block";
 
+        console.log("Game started with players:", playerNames);
+
+        // Display the first random card
         displayRandomCard();
         updateScoreboard();
       });
 
+      // Handle "Next Card" button click
       nextCardButton.addEventListener("click", function () {
+        // Add default score of 0 for each player for the current hole
+        scores.forEach(playerScores => playerScores.push(0));
+
+        // Display a new random card
         displayRandomCard();
+        updateScoreboard();
       });
 
+      // Handle "Restart" button click
       restartButton.addEventListener("click", function () {
-        if (confirm("Are you sure you want to clear all scores and names?")) {
-          gameArea.style.display = "none";
-          playerSetup.style.display = "block";
-
-          playerInputsContainer.innerHTML = "";
-          addPlayerInput();
-
-          currentCardImage.src = "";
-          currentCardImage.alt = "";
-
-          playerScores = [];
+        if (!confirm("Are you sure you want to clear all scores and names?")) {
+          return;
         }
+
+        gameArea.style.display = "none";
+        playerSetup.style.display = "block";
+
+        // Clear existing player inputs and add one default
+        playerInputsContainer.innerHTML = "";
+        addPlayerInput();
+
+        currentCardImage.src = "";
+        currentCardImage.alt = "";
+
+        playerNames = [];
+        scores = [];
+
+        console.log("Game restarted.");
       });
 
+      // Show Splash Screen on page load
       splashScreen.style.display = "block";
     });
   </script>
-  <h6>v 0.7.4.3</h6>
+<h6>v 0.7.5</h6>
 </body>
 </html>
