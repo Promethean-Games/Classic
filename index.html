@@ -42,8 +42,21 @@
       background-color: #a50e0e;
     }
 
-    #game-area {
-      display: none;
+    #scoreboard {
+      text-align: left;
+      margin-top: 20px;
+    }
+
+    .scoreboard-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .btn-small {
+      padding: 5px 10px;
+      font-size: 12px;
     }
 
     .card-image {
@@ -71,6 +84,7 @@
   <!-- Game Area Section -->
   <div id="game-area">
     <img id="current-card" class="card-image" src="" alt="Card Image">
+    <div id="scoreboard"></div>
     <button id="next-card-btn" class="btn">Next Card</button>
     <button id="restart-btn" class="btn">Restart</button>
   </div>
@@ -87,18 +101,17 @@
       const nextCardButton = document.getElementById("next-card-btn");
       const restartButton = document.getElementById("restart-btn");
       const currentCardImage = document.getElementById("current-card");
+      const scoreboard = document.getElementById("scoreboard");
 
-      // Array of card image filenames
       const cardImages = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
+      let playerScores = [];
 
-      // Function to display a random card
       const displayRandomCard = () => {
         const randomIndex = Math.floor(Math.random() * cardImages.length);
         currentCardImage.src = cardImages[randomIndex];
         currentCardImage.alt = `Card ${randomIndex + 1}`;
       };
 
-      // Function to add a player input field
       const addPlayerInput = () => {
         const playerCount = playerInputsContainer.children.length + 1;
         const playerDiv = document.createElement("div");
@@ -109,21 +122,42 @@
         playerInputsContainer.appendChild(playerDiv);
       };
 
-      // Handle Splash Screen Start Button
+      const updateScoreboard = () => {
+        scoreboard.innerHTML = `<h3>Scoreboard</h3>`;
+        playerScores.forEach((player, index) => {
+          const row = document.createElement("div");
+          row.classList.add("scoreboard-row");
+          row.innerHTML = `
+            <span>${player.name}: ${player.score}</span>
+            <div>
+              <button class="btn-small" data-index="${index}" data-change="1">+1</button>
+              <button class="btn-small" data-index="${index}" data-change="-1">-1</button>
+            </div>
+          `;
+          scoreboard.appendChild(row);
+        });
+
+        document.querySelectorAll(".btn-small").forEach(button => {
+          button.addEventListener("click", function () {
+            const index = parseInt(this.dataset.index, 10);
+            const change = parseInt(this.dataset.change, 10);
+            playerScores[index].score += change;
+            updateScoreboard();
+          });
+        });
+      };
+
       startButton.addEventListener("click", function () {
         splashScreen.style.display = "none";
         playerSetup.style.display = "block";
       });
 
-      // Initialize with one player input field
       addPlayerInput();
 
-      // Handle "Add Player" button click
       addPlayerButton.addEventListener("click", function () {
         addPlayerInput();
       });
 
-      // Handle "Start Game" button click
       startGameButton.addEventListener("click", function () {
         const playerNames = Array.from(playerInputsContainer.querySelectorAll("input"))
           .map(input => input.value.trim())
@@ -134,40 +168,37 @@
           return;
         }
 
-        // Hide player setup and show game area
+        playerScores = playerNames.map(name => ({ name, score: 0 }));
+
         playerSetup.style.display = "none";
         gameArea.style.display = "block";
 
-        console.log("Game started with players:", playerNames);
-
-        // Display the first random card
         displayRandomCard();
+        updateScoreboard();
       });
 
-      // Handle "Next Card" button click
       nextCardButton.addEventListener("click", function () {
         displayRandomCard();
       });
 
-      // Handle "Restart" button click
       restartButton.addEventListener("click", function () {
-        gameArea.style.display = "none";
-        playerSetup.style.display = "block";
+        if (confirm("Are you sure you want to clear all scores and names?")) {
+          gameArea.style.display = "none";
+          playerSetup.style.display = "block";
 
-        // Clear existing player inputs and add one default
-        playerInputsContainer.innerHTML = "";
-        addPlayerInput();
+          playerInputsContainer.innerHTML = "";
+          addPlayerInput();
 
-        currentCardImage.src = "";
-        currentCardImage.alt = "";
+          currentCardImage.src = "";
+          currentCardImage.alt = "";
 
-        console.log("Game restarted.");
+          playerScores = [];
+        }
       });
 
-      // Show Splash Screen on page load
       splashScreen.style.display = "block";
     });
   </script>
-<h6>v 0.7.2</h6>
+  <h6>v 0.7.4.3</h6>
 </body>
 </html>
