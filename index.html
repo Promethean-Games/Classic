@@ -52,15 +52,10 @@
       margin: 20px 0;
     }
 
-    #scoreboard {
-      margin-top: 20px;
-    }
-
     table {
       width: 100%;
-      margin: 20px 0;
       border-collapse: collapse;
-      color: #fff;
+      margin-top: 20px;
     }
 
     th, td {
@@ -70,7 +65,7 @@
     }
 
     th {
-      background-color: #333;
+      background-color: #444;
     }
   </style>
 </head>
@@ -78,7 +73,8 @@
   <!-- Splash Screen -->
   <div id="splash-screen">
     <img src="images/Splash-Screen.png" alt="Splash Screen">
-    <button align=center id="start-btn" class="btn">Start</button>
+    <br>
+    <button id="start-btn" class="btn">Start</button>
   </div>
 
   <!-- Player Setup Section -->
@@ -92,22 +88,23 @@
   <!-- Game Area Section -->
   <div id="game-area">
     <img id="current-card" class="card-image" src="" alt="Card Image">
+    <table id="scoreboard">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Score</th>
+          <th>Hole 1</th>
+          <th>Hole 2</th>
+          <th>Hole 3</th>
+          <!-- Additional columns dynamically -->
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Player rows dynamically populated -->
+      </tbody>
+    </table>
     <button id="next-card-btn" class="btn">Next Card</button>
     <button id="restart-btn" class="btn">Restart</button>
-
-    <!-- Scoreboard -->
-    <div id="scoreboard">
-      <h3>Scoreboard</h3>
-      <table id="score-table">
-        <thead>
-          <tr>
-            <th>Player</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <script>
@@ -122,145 +119,111 @@
       const nextCardButton = document.getElementById("next-card-btn");
       const restartButton = document.getElementById("restart-btn");
       const currentCardImage = document.getElementById("current-card");
-      const scoreTable = document.getElementById("score-table");
+      const scoreboard = document.getElementById("scoreboard").querySelector("tbody");
 
-      // Array of card image filenames
       const cardImages = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
+      const players = [];
+      let currentHole = 0;
 
-      // Game state variables
-      let playerNames = [];
-      let currentCardIndex = 0;
-      let scores = [];
-
-      // Function to display a random card
-      const displayRandomCard = () => {
-        currentCardIndex = Math.floor(Math.random() * cardImages.length);
-        currentCardImage.src = cardImages[currentCardIndex];
-        currentCardImage.alt = `Card ${currentCardIndex + 1}`;
-      };
-
-      // Function to add a player input field
       const addPlayerInput = () => {
         const playerCount = playerInputsContainer.children.length + 1;
         const playerDiv = document.createElement("div");
-        playerDiv.classList.add("player-input");
         playerDiv.innerHTML = `
           <input type="text" placeholder="Player ${playerCount}" />
         `;
         playerInputsContainer.appendChild(playerDiv);
       };
 
-      // Function to update the scoreboard
+      const displayRandomCard = () => {
+        const randomIndex = Math.floor(Math.random() * cardImages.length);
+        currentCardImage.src = cardImages[randomIndex];
+        currentCardImage.alt = `Card ${randomIndex + 1}`;
+      };
+
       const updateScoreboard = () => {
-        const theadRow = scoreTable.querySelector("thead tr");
-        const tbody = scoreTable.querySelector("tbody");
-
-        // Clear previous rows
-        theadRow.innerHTML = "<th>Player</th>";
-        tbody.innerHTML = "";
-
-        // Add card columns
-        for (let i = 1; i <= scores[0].length; i++) {
-          const th = document.createElement("th");
-          th.textContent = `Hole ${i}`;
-          theadRow.appendChild(th);
-        }
-
-        // Add player rows
-        scores.forEach((playerScores, index) => {
-          const tr = document.createElement("tr");
-
-          // Player name
-          const nameTd = document.createElement("td");
-          nameTd.textContent = playerNames[index];
-          tr.appendChild(nameTd);
-
-          // Scores
-          playerScores.forEach(score => {
-            const td = document.createElement("td");
-            td.textContent = score;
-            tr.appendChild(td);
+        scoreboard.innerHTML = "";
+        players.forEach(player => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${player.name}</td>
+            <td>${player.totalScore}</td>
+          `;
+          player.scores.forEach((score, index) => {
+            const cell = document.createElement("td");
+            cell.innerHTML = `
+              ${score} 
+              <button class="btn" onclick="adjustScore(${players.indexOf(player)}, ${index}, 1)">+</button>
+              <button class="btn" onclick="adjustScore(${players.indexOf(player)}, ${index}, -1)">-</button>
+            `;
+            row.appendChild(cell);
           });
-
-          tbody.appendChild(tr);
+          scoreboard.appendChild(row);
         });
       };
 
-      // Handle Splash Screen Start Button
-      startButton.addEventListener("click", function () {
+      const addHoleColumn = () => {
+        currentHole++;
+        const header = document.createElement("th");
+        header.textContent = `Hole ${currentHole}`;
+        scoreboard.parentNode.querySelector("thead tr").appendChild(header);
+        players.forEach(player => player.scores.push(0));
+        updateScoreboard();
+      };
+
+      window.adjustScore = (playerIndex, holeIndex, delta) => {
+        players[playerIndex].scores[holeIndex] += delta;
+        players[playerIndex].totalScore = players[playerIndex].scores.reduce((a, b) => a + b, 0);
+        updateScoreboard();
+      };
+
+      startButton.addEventListener("click", () => {
         splashScreen.style.display = "none";
         playerSetup.style.display = "block";
       });
 
-      // Initialize with one player input field
+      addPlayerButton.addEventListener("click", addPlayerInput);
       addPlayerInput();
 
-      // Handle "Add Player" button click
-      addPlayerButton.addEventListener("click", function () {
-        addPlayerInput();
-      });
-
-      // Handle "Start Game" button click
-      startGameButton.addEventListener("click", function () {
-        playerNames = Array.from(playerInputsContainer.querySelectorAll("input"))
+      startGameButton.addEventListener("click", () => {
+        const playerNames = Array.from(playerInputsContainer.querySelectorAll("input"))
           .map(input => input.value.trim())
           .filter(name => name !== "");
-
         if (playerNames.length === 0) {
           alert("Please enter at least one player name.");
           return;
         }
-
-        // Initialize scores
-        scores = playerNames.map(() => []);
-
-        // Hide player setup and show game area
+        playerNames.forEach(name => {
+          players.push({ name, scores: [], totalScore: 0 });
+        });
         playerSetup.style.display = "none";
         gameArea.style.display = "block";
-
-        console.log("Game started with players:", playerNames);
-
-        // Display the first random card
+        addHoleColumn();
         displayRandomCard();
-        updateScoreboard();
       });
 
-      // Handle "Next Card" button click
-      nextCardButton.addEventListener("click", function () {
-        // Add default score of 0 for each player for the current hole
-        scores.forEach(playerScores => playerScores.push(0));
-
-        // Display a new random card
+      nextCardButton.addEventListener("click", () => {
+        addHoleColumn();
         displayRandomCard();
-        updateScoreboard();
       });
 
-      // Handle "Restart" button click
-      restartButton.addEventListener("click", function () {
-        if (!confirm("Are you sure you want to clear all scores and names?")) {
-          return;
+      restartButton.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear all scores and names?")) {
+          gameArea.style.display = "none";
+          playerSetup.style.display = "block";
+          playerInputsContainer.innerHTML = "";
+          addPlayerInput();
+          players.length = 0;
+          currentHole = 0;
+          currentCardImage.src = "";
+          currentCardImage.alt = "";
+          scoreboard.innerHTML = "";
+          console.log("Game restarted.");
         }
-
-        gameArea.style.display = "none";
-        playerSetup.style.display = "block";
-
-        // Clear existing player inputs and add one default
-        playerInputsContainer.innerHTML = "";
-        addPlayerInput();
-
-        currentCardImage.src = "";
-        currentCardImage.alt = "";
-
-        playerNames = [];
-        scores = [];
-
-        console.log("Game restarted.");
       });
 
-      // Show Splash Screen on page load
       splashScreen.style.display = "block";
     });
   </script>
-<h6>v 0.7.5</h6>
+<h6>v 0.7.5.10</h6>
 </body>
 </html>
