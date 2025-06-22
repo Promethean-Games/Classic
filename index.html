@@ -1,229 +1,385 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Par for the Course - Classic</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Par for the Course Score Tracker</title>
   <style>
+    :root {
+      --primary-color: #d32f2f;
+      --accent-color: #ffffff;
+      --background-color: #000000;
+      --text-color: #ffffff;
+      --green: #4caf50;
+      --red: #f44336;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background-color: #000;
-      color: #fff;
+      font-family: var(--font-family);
+      background-color: var(--background-color);
+      color: var(--text-color);
+      margin: 0;
+      padding-bottom: 80px;
+    }
+    h1, h3 {
+      color: var(--primary-color);
       text-align: center;
     }
-
-    #splash-screen, #player-setup, #game-area {
-      max-width: 400px;
-      margin: 20px auto;
-      display: none;
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
     }
-
-    #splash-screen img {
-      width: 100%;
+    .player-form, .par-input, .score-controls, .penalty-scratch-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    input, button {
+      /* Square buttons: no border-radius */
+      border-radius: 0;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      user-select: none;
+    }
+    input[type="text"], input[type="number"] {
+      border: 1px solid #ccc;
+      background: #222;
+      color: white;
+      flex: 1 1 200px;
       max-width: 300px;
     }
-
-    input[type="text"] {
-      width: 80%;
-      padding: 8px;
-      margin-bottom: 10px;
-    }
-
-    .btn {
-      padding: 10px 20px;
-      background-color: #d11111;
+    button {
+      background-color: var(--primary-color);
       color: white;
-      border: none;
-      border-radius: 5px;
       cursor: pointer;
+      min-width: 50px;
+      flex-shrink: 0;
     }
-
-    .btn:hover {
-      background-color: #a50e0e;
+    button:active {
+      filter: brightness(0.85);
     }
-
-    #game-area {
+    #playerList li {
+      background: #222;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      cursor: move;
+      display: flex;
+      align-items: center;
+      user-select: none;
+    }
+    .score-entry {
       display: none;
+      position: relative;
+      overflow: hidden;
+      height: 240px;
+      touch-action: pan-y;
     }
-
-    .card-image {
+    .player-slide {
+      position: absolute;
       width: 100%;
-      max-width: 400px;
-      margin: 20px 0;
+      top: 0;
+      left: 100%;
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 1rem;
+      box-sizing: border-box;
     }
-
+    .player-slide.active {
+      left: 0;
+    }
+    .scoreboard {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #111;
+      border: 1px solid var(--primary-color);
+      padding: 1rem;
+      border-radius: 12px;
+      z-index: 1000;
+      max-height: 80vh;
+      overflow-y: auto;
+      width: 320px;
+      max-width: 50vw;
+    }
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #111;
+      display: flex;
+      justify-content: space-around;
+      padding: 1rem 0;
+      border-top: 2px solid var(--primary-color);
+      z-index: 2000;
+    }
+    .nav-bar button {
+      flex: 1;
+      margin: 0 0.5rem;
+      font-size: 1rem;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
     }
-
     th, td {
-      border: 1px solid #fff;
-      padding: 8px;
+      border: 1px solid #555;
+      padding: 0.4rem 0.6rem;
       text-align: center;
+      color: white;
+      user-select: none;
     }
-
     th {
-      background-color: #444;
+      background-color: #222;
     }
   </style>
 </head>
 <body>
-  <!-- Splash Screen -->
-  <div id="splash-screen">
-    <img src="images/Splash-Screen.png" alt="Splash Screen">
-    <br>
-    <button id="start-btn" class="btn">Start</button>
+  <div class="container">
+    <h1>Par for the Course</h1>
+    <div class="setup-screen">
+      <div class="player-form">
+        <input type="text" id="playerName" placeholder="Player Name" />
+        <button onclick="addPlayer()">Add Player</button>
+      </div>
+      <ul id="playerList"></ul>
+      <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <div class="par-input" id="parContainer" style="display:none;">
+      <label for="parValue">Par:</label>
+      <input type="number" id="parValue" value="3" min="1" />
+    </div>
+
+    <div class="score-entry" id="scoreInputs"></div>
+    <button onclick="nextCard()" id="nextCardBtn" style="display:none;">Next Card</button>
+    <button onclick="toggleLeaderboard()" id="toggleBoardBtn" style="display:none;">Toggle Leaderboard</button>
+
+    <div class="scoreboard" id="scoreboard"></div>
   </div>
 
-  <!-- Player Setup Section -->
-  <div id="player-setup">
-    <h2>Enter Player Names</h2>
-    <div id="player-inputs"></div>
-    <button id="add-player-btn" class="btn">Add Player</button>
-    <button id="start-game-btn" class="btn">Start Game</button>
-  </div>
-
-  <!-- Game Area Section -->
-  <div id="game-area">
-    <img id="current-card" class="card-image" src="" alt="Card Image">
-    <table id="scoreboard">
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Score</th>
-          <th>Hole 1</th>
-          <th>Hole 2</th>
-          <th>Hole 3</th>
-          <!-- Additional columns dynamically -->
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Player rows dynamically populated -->
-      </tbody>
-    </table>
-    <button id="next-card-btn" class="btn">Next Card</button>
-    <button id="restart-btn" class="btn">Restart</button>
+  <div class="nav-bar">
+    <button onclick="saveScores()">Save</button>
+    <button onclick="alert('Coming soon: Player management.')">Mgmt.</button>
+    <button onclick="window.open('https://www.thegamecrafter.com/publishers/promethean-games', '_blank')">Shop</button>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const splashScreen = document.getElementById("splash-screen");
-      const playerSetup = document.getElementById("player-setup");
-      const gameArea = document.getElementById("game-area");
-      const startButton = document.getElementById("start-btn");
-      const playerInputsContainer = document.getElementById("player-inputs");
-      const addPlayerButton = document.getElementById("add-player-btn");
-      const startGameButton = document.getElementById("start-game-btn");
-      const nextCardButton = document.getElementById("next-card-btn");
-      const restartButton = document.getElementById("restart-btn");
-      const currentCardImage = document.getElementById("current-card");
-      const scoreboard = document.getElementById("scoreboard").querySelector("tbody");
+    let players = [];
+    let currentRound = 0;
+    let currentSlide = 0;
 
-      const cardImages = Array.from({ length: 18 }, (_, i) => `images/card${i + 1}.png`);
-      const players = [];
-      let currentHole = 0;
+    function addPlayer() {
+      const name = document.getElementById('playerName').value.trim();
+      if (!name) return;
+      players.push({ name, scores: [], penalties: 0, scratches: 0 });
+      document.getElementById('playerName').value = '';
+      renderPlayerList();
+    }
 
-      const addPlayerInput = () => {
-        const playerCount = playerInputsContainer.children.length + 1;
-        const playerDiv = document.createElement("div");
-        playerDiv.innerHTML = `
-          <input type="text" placeholder="Player ${playerCount}" />
+    function renderPlayerList() {
+      const list = document.getElementById('playerList');
+      list.innerHTML = '';
+      players.forEach((player, i) => {
+        const li = document.createElement('li');
+        li.setAttribute('draggable', 'true');
+        li.setAttribute('data-index', i);
+        li.textContent = player.name;
+
+        li.addEventListener('dragstart', dragStart);
+        li.addEventListener('dragover', dragOver);
+        li.addEventListener('drop', drop);
+        li.addEventListener('dragend', dragEnd);
+
+        list.appendChild(li);
+      });
+    }
+
+    let draggedItem = null;
+    function dragStart(e) {
+      draggedItem = this;
+      setTimeout(() => this.style.display = 'none', 0);
+    }
+    function dragOver(e) {
+      e.preventDefault();
+    }
+    function drop() {
+      const draggedIndex = +draggedItem.getAttribute('data-index');
+      const targetIndex = +this.getAttribute('data-index');
+      const temp = players[draggedIndex];
+      players.splice(draggedIndex, 1);
+      players.splice(targetIndex, 0, temp);
+      renderPlayerList();
+    }
+    function dragEnd() {
+      this.style.display = 'flex';
+      draggedItem = null;
+    }
+
+    function startGame() {
+      if (players.length === 0) {
+        alert('Add at least one player!');
+        return;
+      }
+      document.querySelector('.setup-screen').style.display = 'none';
+      document.getElementById('scoreInputs').style.display = 'block';
+      document.getElementById('parContainer').style.display = 'flex';
+      document.getElementById('nextCardBtn').style.display = 'inline-block';
+      document.getElementById('toggleBoardBtn').style.display = 'inline-block';
+      renderScoreInputs();
+      renderScoreboard();
+    }
+
+    function renderScoreInputs() {
+      const container = document.getElementById('scoreInputs');
+      container.innerHTML = '';
+      players.forEach((player, i) => {
+        const div = document.createElement('div');
+        div.className = 'player-slide';
+        if (i === currentSlide) div.classList.add('active');
+
+        div.innerHTML = `
+          <h3>${player.name}</h3>
+          <div class="score-controls" style="margin-bottom: 0.5rem;">
+            <button aria-label="Decrease score" onclick="adjustScore(${i}, -1)">-</button>
+            <span id="score-${i}" style="min-width:40px; text-align:center;">${getLatestScore(player)}</span>
+            <button aria-label="Increase score" onclick="adjustScore(${i}, 1)">+</button>
+          </div>
+          <div class="penalty-scratch-controls">
+            <button aria-label="Add Penalty" onclick="addPenalty(${i})">+P</button>
+            <button aria-label="Add Scratch" onclick="addScratch(${i})">+S</button>
+          </div>
         `;
-        playerInputsContainer.appendChild(playerDiv);
-      };
-
-      const displayRandomCard = () => {
-        const randomIndex = Math.floor(Math.random() * cardImages.length);
-        currentCardImage.src = cardImages[randomIndex];
-        currentCardImage.alt = `Card ${randomIndex + 1}`;
-      };
-
-      const updateScoreboard = () => {
-        scoreboard.innerHTML = "";
-        players.forEach(player => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${player.name}</td>
-            <td>${player.totalScore}</td>
-          `;
-          player.scores.forEach((score, index) => {
-            const cell = document.createElement("td");
-            cell.innerHTML = `
-              ${score} 
-              <button class="btn" onclick="adjustScore(${players.indexOf(player)}, ${index}, 1)">+</button>
-              <button class="btn" onclick="adjustScore(${players.indexOf(player)}, ${index}, -1)">-</button>
-            `;
-            row.appendChild(cell);
-          });
-          scoreboard.appendChild(row);
-        });
-      };
-
-      const addHoleColumn = () => {
-        currentHole++;
-        const header = document.createElement("th");
-        header.textContent = `Hole ${currentHole}`;
-        scoreboard.parentNode.querySelector("thead tr").appendChild(header);
-        players.forEach(player => player.scores.push(0));
-        updateScoreboard();
-      };
-
-      window.adjustScore = (playerIndex, holeIndex, delta) => {
-        players[playerIndex].scores[holeIndex] += delta;
-        players[playerIndex].totalScore = players[playerIndex].scores.reduce((a, b) => a + b, 0);
-        updateScoreboard();
-      };
-
-      startButton.addEventListener("click", () => {
-        splashScreen.style.display = "none";
-        playerSetup.style.display = "block";
+        container.appendChild(div);
       });
+      enableSwipe(container);
+    }
 
-      addPlayerButton.addEventListener("click", addPlayerInput);
-      addPlayerInput();
-
-      startGameButton.addEventListener("click", () => {
-        const playerNames = Array.from(playerInputsContainer.querySelectorAll("input"))
-          .map(input => input.value.trim())
-          .filter(name => name !== "");
-        if (playerNames.length === 0) {
-          alert("Please enter at least one player name.");
-          return;
-        }
-        playerNames.forEach(name => {
-          players.push({ name, scores: [], totalScore: 0 });
-        });
-        playerSetup.style.display = "none";
-        gameArea.style.display = "block";
-        addHoleColumn();
-        displayRandomCard();
+    function enableSwipe(container) {
+      let startX = 0;
+      container.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+      container.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - startX;
+        if (dx < -50) nextSlide();
+        if (dx > 50) prevSlide();
       });
+    }
 
-      nextCardButton.addEventListener("click", () => {
-        addHoleColumn();
-        displayRandomCard();
-      });
+    function nextSlide() {
+      const slides = document.querySelectorAll('.player-slide');
+      if (currentSlide < slides.length - 1) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide++;
+        slides[currentSlide].classList.add('active');
+      }
+    }
 
-      restartButton.addEventListener("click", () => {
-        if (confirm("Are you sure you want to clear all scores and names?")) {
-          gameArea.style.display = "none";
-          playerSetup.style.display = "block";
-          playerInputsContainer.innerHTML = "";
-          addPlayerInput();
-          players.length = 0;
-          currentHole = 0;
-          currentCardImage.src = "";
-          currentCardImage.alt = "";
-          scoreboard.innerHTML = "";
-          console.log("Game restarted.");
-        }
-      });
+    function prevSlide() {
+      const slides = document.querySelectorAll('.player-slide');
+      if (currentSlide > 0) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide--;
+        slides[currentSlide].classList.add('active');
+      }
+    }
 
-      splashScreen.style.display = "block";
-    });
+    function getLatestScore(player) {
+      return player.scores[currentRound] ?? 0;
+    }
+
+    function adjustScore(index, delta) {
+      const player = players[index];
+      if (player.scores[currentRound] == null) player.scores[currentRound] = 0;
+      player.scores[currentRound] += delta;
+      updateScoreDisplay(index);
+      renderScoreboard();
+    }
+
+    function addPenalty(index) {
+      const player = players[index];
+      if (player.scores[currentRound] == null) player.scores[currentRound] = 0;
+      player.penalties++;
+      // Penalty adds +1 to score immediately
+      player.scores[currentRound] += 1;
+      updateScoreDisplay(index);
+      renderScoreboard();
+    }
+
+    function addScratch(index) {
+      const player = players[index];
+      if (player.scores[currentRound] == null) player.scores[currentRound] = 0;
+      player.scratches++;
+      // Scratch adds +2 to score immediately
+      player.scores[currentRound] += 2;
+      updateScoreDisplay(index);
+      renderScoreboard();
+    }
+
+    function updateScoreDisplay(index) {
+      const span = document.getElementById(`score-${index}`);
+      span.textContent = players[index].scores[currentRound];
+    }
+
+    function calculateTotal(player) {
+      // Sum all round scores (which already include penalties & scratches)
+      return player.scores.reduce((sum, val) => sum + (val || 0), 0);
+    }
+
+    function nextCard() {
+      currentRound++;
+      currentSlide = 0;
+      renderScoreInputs();
+      renderScoreboard();
+    }
+
+    function toggleLeaderboard() {
+      const board = document.getElementById('scoreboard');
+      board.style.display = board.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function renderScoreboard() {
+      const board = document.getElementById('scoreboard');
+      board.innerHTML = `<h3>Leaderboard - Round ${currentRound}</h3>`;
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead><tr>
+          <th style="text-align:left;">Player</th>
+          ${[...Array(currentRound)].map((_, i) => `<th>${i + 1}</th>`).join('')}
+          <th>Total</th><th>P</th><th>S</th>
+        </tr></thead>
+        <tbody>
+        ${players.map(player => {
+          const scoreCells = [...Array(currentRound)].map((_, i) => `<td>${player.scores[i] ?? 0}</td>`).join('');
+          return `<tr>
+            <td style="text-align:left;">${player.name}</td>
+            ${scoreCells}
+            <td>${calculateTotal(player)}</td>
+            <td>${player.penalties}</td>
+            <td>${player.scratches}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      `;
+      board.innerHTML = '';
+      board.appendChild(table);
+    }
+
+    function saveScores() {
+      const saveData = JSON.stringify({ players, round: currentRound }, null, 2);
+      console.log("Game Saved:", saveData);
+      alert("Scores saved to console (mock save).");
+    }
   </script>
-<h6>v 0.7.5.10</h6>
+<h6>v 1.0.00</h6>
 </body>
 </html>
