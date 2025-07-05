@@ -6,11 +6,13 @@
   <title>Par for the Course</title>
   <style>
     :root {
-      --primary: #d32f2f;
+      --primary: #d11111;
       --background: #000;
       --text: #fff;
       --green: #4caf50;
       --red: #f44336;
+      --alt-background: #fff;
+      --alt-text: #000;
     }
 
     body {
@@ -27,13 +29,17 @@
       padding: 1rem;
     }
 
-    h1, h2 {
+    h1, h2, h3, h4, h5 {
       text-align: center;
       color: var(--primary);
     }
 
     .setup-screen {
       display: block;
+    }
+
+    .score-screen, .end-screen, .settings-screen, .scores-screen {
+      display: none;
     }
 
     .player-form {
@@ -52,7 +58,7 @@
       padding: 0.5rem 1rem;
       background: var(--primary);
       color: var(--text);
-      border: none;
+      border: 2px solid #000;
       font-size: 1rem;
       cursor: pointer;
     }
@@ -98,6 +104,14 @@
       font-weight: bold;
     }
 
+    .hole-banner {
+      background: var(--primary);
+      padding: 0.25rem 1rem;
+      color: white;
+      margin: 0.5rem 0;
+      font-weight: bold;
+    }
+
     .stats {
       margin-top: 0.5rem;
       font-size: 1rem;
@@ -133,6 +147,27 @@
       margin-top: 0.5rem;
     }
 
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      background: var(--primary);
+      border-top: 2px solid black;
+    }
+
+    .bottom-nav button {
+      flex: 1;
+      padding: 1rem;
+      background: var(--primary);
+      color: var(--text);
+      font-size: 1rem;
+      border: 2px solid black;
+      cursor: pointer;
+    }
+
     .hidden {
       display: none;
     }
@@ -145,6 +180,12 @@
       color: var(--red);
       text-align: center;
       margin-bottom: 1rem;
+    }
+
+    select {
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin: 1rem 0;
     }
   </style>
 </head>
@@ -166,7 +207,20 @@
 
     <div class="score-screen hidden">
       <h2>Gameplay Screen</h2>
+      <div class="centered">
+        <label for="parSelect">Par for this hole: </label>
+        <select id="parSelect">
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
       <div id="gameplay"></div>
+      <div class="centered">
+        <button onclick="nextCard()">Next Card</button>
+        <button onclick="toggleBoxScore()">Toggle Leaderboard</button>
+      </div>
+      <div id="boxScore" class="hidden"></div>
     </div>
 
     <div class="end-screen hidden">
@@ -175,9 +229,18 @@
     </div>
   </div>
 
+  <div class="bottom-nav">
+    <button onclick="goToSettings()">Settings</button>
+    <button onclick="goToScores()">Scores</button>
+    <button onclick="window.open('https://www.thegamecrafter.com/games/par-for-the-course-classic','_blank')">Shop</button>
+  </div>
+
   <script>
     let players = [];
     let currentPlayerIndex = 0;
+    let currentHole = 1;
+    let par = 4;
+    let boxScores = [];
 
     function addPlayer() {
       const nameInput = document.getElementById('playerName');
@@ -194,7 +257,7 @@
         return;
       }
 
-      const player = { name, strokes: 0, penalties: 0, scratches: 0 };
+      const player = { name, strokes: 0, penalties: 0, scratches: 0, total: 0, holes: [] };
       players.push(player);
 
       const li = document.createElement('li');
@@ -249,6 +312,7 @@
             <div class="player-name">${player.name}</div>
             <button onclick="nextPlayer()">▶️</button>
           </div>
+          <div class="hole-banner">Hole ${currentHole}</div>
           <div class="stats" id="stats-${index}">
             Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}
           </div>
@@ -286,13 +350,13 @@
     }
 
     function addPenalty(index) {
-      players[index].penalties += 1;
-      players[index].strokes += 1;
+      players[index].penalties++;
+      players[index].strokes++;
       updateStats(index);
     }
 
     function addScratch(index) {
-      players[index].scratches += 1;
+      players[index].scratches++;
       players[index].strokes += 2;
       updateStats(index);
     }
@@ -300,9 +364,46 @@
     function updateStats(index) {
       const player = players[index];
       document.getElementById(`score-${index}`).textContent = player.strokes;
-      document.getElementById(`stats-${index}`).textContent =
-        `Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}`;
+      document.getElementById(`stats-${index}`).textContent = `Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}`;
+    }
+
+    function nextCard() {
+      // Record current hole scores
+      players.forEach(p => {
+        p.holes.push({ strokes: p.strokes, par: par });
+        p.total += p.strokes;
+        p.strokes = 0;
+      });
+      par = parseInt(document.getElementById('parSelect').value);
+      currentHole++;
+
+      // Sort players by total score
+      players.sort((a, b) => a.total - b.total || players.indexOf(a) - players.indexOf(b));
+
+      currentPlayerIndex = 0;
+      renderGameUI();
+      showPlayer(currentPlayerIndex);
+    }
+
+    function toggleBoxScore() {
+      const box = document.getElementById('boxScore');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        let html = '<table><tr><th>Player</th>';
+        for (let i = 0; i < currentHole - 1; i++) {
+          html += `<th>H${i + 1}</th>`;
+        }
+        html += '<th>Total</th><th>Pen</th><th>Scr</th></tr>';
+        players.forEach(p => {
+          html += `<tr><td>${p.name}</td>`;
+          p.holes.forEach(h => html += `<td>${h.strokes}</td>`);
+          html += `<td>${p.total}</td><td>${p.penalties}</td><td>${p.scratches}</td></tr>`;
+        });
+        html += '</table>';
+        box.innerHTML = html;
+      }
     }
   </script>
-<h6 align=center>v 1.0.00</h6></body>
+  <h6 align=center>v 1.0.01</h6>
+</body>
 </html>
