@@ -1,321 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Par for the Course</title>
-<style>
-  :root {
-    --primary: #d32f2f;
-    --background: #000;
-    --text: #fff;
-    --green: #4caf50;
-    --red: #f44336;
-  }
-  body {
-    margin: 0;
-    background: var(--background);
-    color: var(--text);
-    font-family: 'Segoe UI', sans-serif;
-    padding-bottom: 100px;
-  }
-  .container {
-    max-width: 600px;
-    margin: auto;
-    padding: 1rem;
-  }
-  h1, h2 {
-    text-align: center;
-    color: var(--primary);
-  }
-  .setup-screen {
-    display: block;
-  }
-  .score-screen, .end-screen {
-    display: none;
-  }
-  .player-form {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  .player-form input {
-    flex: 1;
-    padding: 0.5rem;
-    font-size: 1rem;
-  }
-  .player-form button {
-    padding: 0.5rem 1rem;
-    background: var(--primary);
-    color: var(--text);
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  ul#playerList {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 1rem;
-  }
-  ul#playerList li {
-    background: #111;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    cursor: grab;
-  }
-  .note {
-    text-align: center;
-    font-size: 0.9rem;
-    color: #aaa;
-    margin-bottom: 1rem;
-  }
-  .centered {
-    display: flex;
-    justify-content: center;
-    margin: 1rem 0;
-  }
-  .player-slide {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
-    min-height: 300px; /* ensure visible height */
-  }
-  .player-slide.active {
-    display: flex;
-  }
-  .controls {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-  .player-name {
-    font-size: 3rem;
-    font-weight: bold;
-    flex-grow: 1;
-    text-align: center;
-  }
-  .stats {
-    margin-top: 1rem;
-    font-size: 1.2rem;
-  }
-  .score {
-    font-size: 6rem;
-    margin: 1rem 0;
-    font-weight: 700;
-    user-select: none;
-  }
-  .score-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    width: 100%;
-    max-width: 320px;
-  }
-  .score-grid button {
-    font-size: 2rem;
-    padding: 1rem;
-    background: #222;
-    color: var(--text);
-    border: 2px solid #333;
-    width: 100%;
-    text-align: center;
-    user-select: none;
-    cursor: pointer;
-  }
-  .hidden {
-    display: none;
-  }
-  .player-form input.error {
-    border: 2px solid var(--red);
-  }
-  .error-message {
-    color: var(--red);
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Par for the Course</title>
+  <style>
+    :root {
+      --primary: #d32f2f;
+      --background: #000;
+      --text: #fff;
+      --green: #4caf50;
+      --red: #f44336;
+    }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      padding-bottom: 100px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 1rem;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: var(--primary);
+    }
+
+    .setup-screen {
+      display: block;
+    }
+
+    .player-form {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .player-form input {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .player-form button {
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: var(--text);
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    ul#playerList {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 1rem;
+    }
+
+    ul#playerList li {
+      background: #111;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      cursor: grab;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-bottom: 1rem;
+    }
+
+    .centered {
+      display: flex;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+
+    .player-slide {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .player-slide.active {
+      display: flex;
+    }
+
+    .player-name {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    .stats {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .score {
+      font-size: 4rem;
+      margin: 1rem 0;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .score-grid button {
+      font-size: 1.5rem;
+      padding: 1rem;
+      background: #222;
+      color: var(--text);
+      border: 2px solid #333;
+      width: 100%;
+      text-align: center;
+    }
+
+    .controls {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .player-form input.error {
+      border: 2px solid var(--red);
+    }
+
+    .error-message {
+      color: var(--red);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <div class="setup-screen">
-    <h1>Par for the Course</h1>
-    <div class="player-form">
-      <input type="text" id="playerName" placeholder="Enter name" autofocus />
-      <button onclick="addPlayer()">Add Player</button>
+  <div class="container">
+    <div class="setup-screen">
+      <h1>Par for the Course</h1>
+      <div class="player-form">
+        <input type="text" id="playerName" placeholder="Enter name" autofocus />
+        <button onclick="addPlayer()">Add Player</button>
+      </div>
+      <div class="error-message" id="error"></div>
+      <ul id="playerList"></ul>
+      <div class="note">Enter player names from tallest to shortest height.<br>Drag to reorder.</div>
+      <div class="centered">
+        <button onclick="startGame()">Start Game</button>
+      </div>
     </div>
-    <div class="error-message" id="error"></div>
-    <ul id="playerList"></ul>
-    <div class="note">Enter player names from tallest to shortest height.<br>Drag to reorder.</div>
-    <div class="centered">
-      <button onclick="startGame()">Start Game</button>
+
+    <div class="score-screen hidden">
+      <h2>Gameplay Screen</h2>
+      <div id="gameplay"></div>
+    </div>
+
+    <div class="end-screen hidden">
+      <h2>Game Over</h2>
+      <div id="finalResults"></div>
     </div>
   </div>
 
-  <div class="score-screen hidden">
-    <h2>Gameplay Screen</h2>
-    <div id="gameplay"></div>
-  </div>
+  <script>
+    let players = [];
+    let currentPlayerIndex = 0;
 
-  <div class="end-screen hidden">
-    <h2>Game Over</h2>
-    <div id="finalResults"></div>
-    <a href="https://www.facebook.com/sharer/sharer.php?u=https://yourgamepage.com" target="_blank">Share to Facebook</a>
-  </div>
-</div>
+    function addPlayer() {
+      const nameInput = document.getElementById('playerName');
+      const name = nameInput.value.trim();
+      const errorBox = document.getElementById('error');
+      errorBox.textContent = '';
+      nameInput.classList.remove('error');
 
-<script>
-  let players = [];
-  let currentPlayerIndex = 0;
+      if (!name) return;
 
-  function addPlayer() {
-    const nameInput = document.getElementById('playerName');
-    const name = nameInput.value.trim();
-    const errorBox = document.getElementById('error');
-    errorBox.textContent = '';
-    nameInput.classList.remove('error');
-
-    if (!name) return;
-
-    if (players.some(p => p.name === name)) {
-      errorBox.textContent = 'Duplicate name. Try adding a 2 or using a nickname.';
-      nameInput.classList.add('error');
-      return;
-    }
-
-    const player = { name, strokes: 0, penalties: 0, scratches: 0 };
-    players.push(player);
-
-    const li = document.createElement('li');
-    li.textContent = name;
-    li.draggable = true;
-    li.addEventListener('dragstart', dragStart);
-    li.addEventListener('dragover', dragOver);
-    li.addEventListener('drop', drop);
-    document.getElementById('playerList').appendChild(li);
-
-    nameInput.value = '';
-    nameInput.focus();
-
-    console.log('Player added:', name);
-  }
-
-  let dragged;
-
-  function dragStart(e) {
-    dragged = e.target;
-    // Add dragging style if desired
-  }
-
-  function dragOver(e) {
-    e.preventDefault();
-  }
-
-  function drop(e) {
-    e.preventDefault();
-    const list = document.getElementById('playerList');
-    const children = Array.from(list.children);
-    const newIndex = children.indexOf(e.target);
-    const oldIndex = children.indexOf(dragged);
-
-    if (newIndex > -1 && oldIndex > -1 && newIndex !== oldIndex) {
-      players.splice(newIndex, 0, players.splice(oldIndex, 1)[0]);
-      list.insertBefore(dragged, newIndex > oldIndex ? e.target.nextSibling : e.target);
-      console.log(`Moved player from ${oldIndex} to ${newIndex}`);
-    }
-  }
-
-  function startGame() {
-    if (players.length === 0) {
-      alert('Add at least one player to start the game.');
-      return;
-    }
-    currentPlayerIndex = 0;
-
-    document.querySelector('.setup-screen').classList.add('hidden');
-    document.querySelector('.score-screen').classList.remove('hidden');
-
-    renderGameUI();
-    showPlayer(currentPlayerIndex);
-  }
-
-  function renderGameUI() {
-    const gameplay = document.getElementById('gameplay');
-    gameplay.innerHTML = '';
-
-    players.forEach((player, index) => {
-      const div = document.createElement('div');
-      div.className = 'player-slide';
-      div.id = `player-${index}`;
-      div.innerHTML = `
-        <div class="controls">
-          <button onclick="prevPlayer()">◀️</button>
-          <div class="player-name">${player.name}</div>
-          <button onclick="nextPlayer()">▶️</button>
-        </div>
-        <div class="stats" id="stats-${index}">
-          Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}
-        </div>
-        <div class="score" id="score-${index}">${player.strokes}</div>
-        <div class="score-grid">
-          <button onclick="adjustScore(${index}, -1)">-</button>
-          <button onclick="adjustScore(${index}, 1)">+</button>
-          <button onclick="addPenalty(${index})">Penalty (+1)</button>
-          <button onclick="addScratch(${index})">Scratch (+2)</button>
-        </div>
-      `;
-      gameplay.appendChild(div);
-    });
-
-    showPlayer(currentPlayerIndex);
-  }
-
-  function showPlayer(index) {
-    const slides = document.querySelectorAll('.player-slide');
-    slides.forEach((el, i) => {
-      if (i === index) {
-        el.classList.add('active');
-      } else {
-        el.classList.remove('active');
+      if (players.some(p => p.name === name)) {
+        errorBox.textContent = 'Duplicate name. Try adding a 2 or using a nickname.';
+        nameInput.classList.add('error');
+        return;
       }
-    });
-  }
 
-  function nextPlayer() {
-    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-    showPlayer(currentPlayerIndex);
-  }
+      const player = { name, strokes: 0, penalties: 0, scratches: 0 };
+      players.push(player);
 
-  function prevPlayer() {
-    currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
-    showPlayer(currentPlayerIndex);
-  }
+      const li = document.createElement('li');
+      li.textContent = name;
+      li.draggable = true;
+      li.addEventListener('dragstart', dragStart);
+      li.addEventListener('dragover', dragOver);
+      li.addEventListener('drop', drop);
+      document.getElementById('playerList').appendChild(li);
 
-  function adjustScore(index, delta) {
-    players[index].strokes += delta;
-    updateStats(index);
-  }
+      nameInput.value = '';
+      nameInput.focus();
+    }
 
-  function addPenalty(index) {
-    players[index].penalties++;
-    players[index].strokes++;
-    updateStats(index);
-  }
+    let dragged;
+    function dragStart(e) { dragged = e.target; }
+    function dragOver(e) { e.preventDefault(); }
+    function drop(e) {
+      e.preventDefault();
+      const list = document.getElementById('playerList');
+      const children = Array.from(list.children);
+      const newIndex = children.indexOf(e.target);
+      const oldIndex = children.indexOf(dragged);
 
-  function addScratch(index) {
-    players[index].scratches++;
-    players[index].strokes += 2;
-    updateStats(index);
-  }
+      if (newIndex > -1 && oldIndex > -1 && newIndex !== oldIndex) {
+        players.splice(newIndex, 0, players.splice(oldIndex, 1)[0]);
+        list.insertBefore(dragged, newIndex > oldIndex ? e.target.nextSibling : e.target);
+      }
+    }
 
-  function updateStats(index) {
-    const player = players[index];
-    document.getElementById(`score-${index}`).textContent = player.strokes;
-    document.getElementById(`stats-${index}`).textContent =
-      `Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}`;
-  }
-</script>
-</body>
+    function startGame() {
+      if (players.length === 0) return;
+
+      document.querySelector('.setup-screen').classList.add('hidden');
+      document.querySelector('.score-screen').classList.remove('hidden');
+
+      renderGameUI();
+      showPlayer(currentPlayerIndex);
+    }
+
+    function renderGameUI() {
+      const gameplay = document.getElementById('gameplay');
+      gameplay.innerHTML = '';
+
+      players.forEach((player, index) => {
+        const div = document.createElement('div');
+        div.className = 'player-slide';
+        div.id = `player-${index}`;
+        div.innerHTML = `
+          <div class="controls">
+            <button onclick="prevPlayer()">◀️</button>
+            <div class="player-name">${player.name}</div>
+            <button onclick="nextPlayer()">▶️</button>
+          </div>
+          <div class="stats" id="stats-${index}">
+            Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}
+          </div>
+          <div class="score" id="score-${index}">${player.strokes}</div>
+          <div class="score-grid">
+            <button onclick="adjustScore(${index}, -1)">-</button>
+            <button onclick="adjustScore(${index}, 1)">+</button>
+            <button onclick="addPenalty(${index})">Penalty (+1)</button>
+            <button onclick="addScratch(${index})">Scratch (+2)</button>
+          </div>
+        `;
+        gameplay.appendChild(div);
+      });
+    }
+
+    function showPlayer(index) {
+      document.querySelectorAll('.player-slide').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+      });
+    }
+
+    function nextPlayer() {
+      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      showPlayer(currentPlayerIndex);
+    }
+
+    function prevPlayer() {
+      currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
+      showPlayer(currentPlayerIndex);
+    }
+
+    function adjustScore(index, delta) {
+      players[index].strokes += delta;
+      updateStats(index);
+    }
+
+    function addPenalty(index) {
+      players[index].penalties += 1;
+      players[index].strokes += 1;
+      updateStats(index);
+    }
+
+    function addScratch(index) {
+      players[index].scratches += 1;
+      players[index].strokes += 2;
+      updateStats(index);
+    }
+
+    function updateStats(index) {
+      const player = players[index];
+      document.getElementById(`score-${index}`).textContent = player.strokes;
+      document.getElementById(`stats-${index}`).textContent =
+        `Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}`;
+    }
+  </script>
+<h5>v 1.0.00</h5></body>
 </html>
