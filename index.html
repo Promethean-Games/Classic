@@ -1,409 +1,1190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Par for the Course</title>
-  <style>
-    :root {
-      --primary: #d11111;
-      --background: #000;
-      --text: #fff;
-      --green: #4caf50;
-      --red: #f44336;
-      --alt-background: #fff;
-      --alt-text: #000;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Par for the Course</title>
+<style>
+  :root {
+    --primary: #d11111;
+    --background: #000;
+    --text: #fff;
+    --green: #4caf50;
+    --red: #f44336;
+    --alt-background: #fff;
+    --alt-text: #000;
+  }
 
-    body {
-      margin: 0;
-      background: var(--background);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-      padding-bottom: 100px;
-    }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    padding-bottom: 100px;
+    transition: background 0.3s, color 0.3s;
+  }
 
-    .container {
-      max-width: 600px;
-      margin: auto;
-      padding: 1rem;
-    }
+  body.light {
+    background: var(--alt-background);
+    color: var(--alt-text);
+  }
 
-    h1, h2, h3, h4, h5 {
-      text-align: center;
-      color: var(--primary);
-    }
+  .container {
+    max-width: 600px;
+    margin: auto;
+    padding: 1rem;
+  }
 
-    .setup-screen {
-      display: block;
-    }
+  h1, h2, h3, h4, h5 {
+    text-align: center;
+    color: var(--primary);
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+  }
 
-    .score-screen, .end-screen, .settings-screen, .scores-screen {
-      display: none;
-    }
+  .setup-screen, .score-screen, .end-screen, .settings-screen, .scores-screen {
+    display: none;
+  }
+  .active-screen {
+    display: block;
+  }
 
-    .player-form {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
+  .player-form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
 
-    .player-form input {
-      flex: 1;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
+  .player-form input {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
 
-    .player-form button {
-      padding: 0.5rem 1rem;
-      background: var(--primary);
-      color: var(--text);
-      border: 2px solid #000;
-      font-size: 1rem;
-      cursor: pointer;
-    }
+  .player-form input.error {
+    border: 2px solid var(--red);
+  }
 
-    ul#playerList {
-      list-style: none;
-      padding: 0;
-      margin-bottom: 1rem;
-    }
+  .player-form button {
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: var(--text);
+    border: 2px solid black;
+    font-size: 1rem;
+    cursor: pointer;
+  }
 
-    ul#playerList li {
-      background: #111;
-      padding: 0.5rem;
-      margin-bottom: 0.5rem;
-      cursor: grab;
-    }
+  ul#playerList {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    max-height: 150px;
+    overflow-y: auto;
+  }
 
-    .note {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #aaa;
-      margin-bottom: 1rem;
-    }
+  ul#playerList li {
+    background: #111;
+    padding: 0.6rem;
+    margin-bottom: 0.4rem;
+    cursor: grab;
+    border: 1px solid #222;
+    user-select: none;
+  }
 
-    .centered {
-      display: flex;
-      justify-content: center;
-      margin: 1rem 0;
-    }
+  ul#playerList li.dragging {
+    opacity: 0.5;
+  }
 
-    .player-slide {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-    }
+  .note {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 1rem;
+  }
 
-    .player-slide.active {
-      display: flex;
-    }
+  .centered {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+  }
 
-    .player-name {
-      font-size: 2rem;
-      font-weight: bold;
-    }
+  .player-slide {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+  }
 
-    .hole-banner {
-      background: var(--primary);
-      padding: 0.25rem 1rem;
-      color: white;
-      margin: 0.5rem 0;
-      font-weight: bold;
-    }
+  .player-slide.active {
+    display: flex;
+  }
 
-    .stats {
-      margin-top: 0.5rem;
-      font-size: 1rem;
-    }
+  .player-name {
+    font-size: 3rem;
+    font-weight: bold;
+    user-select: none;
+  }
 
-    .score {
-      font-size: 4rem;
-      margin: 1rem 0;
-    }
+  .hole-banner {
+    background: var(--primary);
+    padding: 0.3rem 1rem;
+    color: white;
+    margin: 0.5rem 0 1rem 0;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-radius: 3px;
+    user-select: none;
+  }
 
-    .score-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      width: 100%;
-      max-width: 300px;
-    }
+  .stats {
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    user-select: none;
+  }
 
-    .score-grid button {
-      font-size: 1.5rem;
-      padding: 1rem;
-      background: #222;
-      color: var(--text);
-      border: 2px solid #333;
-      width: 100%;
-      text-align: center;
-    }
+  .score {
+    font-size: 6rem;
+    margin: 1rem 0 1.5rem 0;
+    user-select: none;
+  }
 
-    .controls {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      margin-top: 0.5rem;
-    }
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 60px);
+    gap: 1rem;
+    width: 100%;
+    max-width: 320px;
+  }
 
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      display: flex;
-      justify-content: space-around;
-      background: var(--primary);
-      border-top: 2px solid black;
-    }
+  .score-grid button {
+    font-size: 1.8rem;
+    padding: 0;
+    background: #222;
+    color: var(--text);
+    border: 2px solid #333;
+    width: 100%;
+    cursor: pointer;
+    user-select: none;
+  }
 
-    .bottom-nav button {
-      flex: 1;
-      padding: 1rem;
-      background: var(--primary);
-      color: var(--text);
-      font-size: 1rem;
-      border: 2px solid black;
-      cursor: pointer;
-    }
+  .controls {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    align-items: center;
+  }
 
-    .hidden {
-      display: none;
-    }
+  .controls button {
+    background: var(--primary);
+    border: 2px solid black;
+    color: var(--text);
+    font-size: 2rem;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 0;
+  }
 
-    .player-form input.error {
-      border: 2px solid var(--red);
-    }
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    background: var(--primary);
+    border-top: 2px solid black;
+    z-index: 1000;
+  }
 
-    .error-message {
-      color: var(--red);
-      text-align: center;
-      margin-bottom: 1rem;
-    }
+  .bottom-nav button {
+    flex: 1;
+    padding: 1rem 0;
+    background: var(--primary);
+    color: var(--text);
+    font-size: 1.1rem;
+    border: 2px solid black;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 0;
+  }
 
-    select {
-      font-size: 1rem;
-      padding: 0.5rem;
-      margin: 1rem 0;
-    }
-  </style>
+  .hidden {
+    display: none;
+  }
+
+  .error-message {
+    color: var(--red);
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  select {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    margin: 1rem 0 1.5rem 0;
+    cursor: pointer;
+  }
+
+  /* Box score styling */
+  #boxScore {
+    margin-top: 1rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+  }
+
+  #boxScore table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text);
+  }
+
+  #boxScore th, #boxScore td {
+    border: 1px solid #555;
+    padding: 4px 6px;
+    text-align: center;
+  }
+
+  #boxScore th {
+    background: var(--primary);
+    user-select: none;
+  }
+
+  #boxScore td.over-par {
+    color: var(--red);
+    font-weight: bold;
+  }
+
+  #boxScore td.under-par {
+    color: var(--green);
+    font-weight: bold;
+  }
+
+  /* Save slots in Scores screen */
+  .save-slot {
+    background: #111;
+    border: 2px solid #222;
+    margin-bottom: 0.7rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text);
+  }
+
+  .save-slot.empty {
+    color: #888;
+    border-style: dashed;
+    cursor: default;
+  }
+
+  /* End screen styling */
+  #finalResults {
+    margin-top: 1rem;
+  }
+
+  #finalResults .winner {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  #finalResults .player-result {
+    margin: 0.3rem 0;
+    padding: 0.3rem 0.6rem;
+    border-bottom: 1px solid #333;
+    user-select: none;
+  }
+
+  #finalResults .player-result:nth-child(odd) {
+    background: #111;
+  }
+
+  #finalResults .player-result .name {
+    font-weight: 700;
+  }
+
+  #finalResults .player-result .score {
+    float: right;
+  }
+
+  #finalResults .share {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  #finalResults .share a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  /* Settings page */
+  .settings-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .settings-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  .settings-section input[type="text"], .settings-section input[type="number"] {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .settings-section button {
+    margin-top: 0.5rem;
+    background: var(--primary);
+    border: 2px solid black;
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    user-select: none;
+  }
+
+  /* Scores page */
+  .scores-header {
+    margin-bottom: 1rem;
+  }
+
+  .scores-header button {
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .scores-controls {
+    margin-top: 1rem;
+  }
+
+  /* Scrollbar for player list */
+  ul#playerList::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ul#playerList::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+
+  ul#playerList::-webkit-scrollbar-track {
+    background: #222;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="setup-screen">
-      <h1>Par for the Course</h1>
-      <div class="player-form">
-        <input type="text" id="playerName" placeholder="Enter name" autofocus />
-        <button onclick="addPlayer()">Add Player</button>
-      </div>
-      <div class="error-message" id="error"></div>
-      <ul id="playerList"></ul>
-      <div class="note">Enter player names from tallest to shortest height.<br>Drag to reorder.</div>
-      <div class="centered">
-        <button onclick="startGame()">Start Game</button>
-      </div>
-    </div>
+<div class="container">
 
-    <div class="score-screen hidden">
-      <h2>Gameplay Screen</h2>
-      <div class="centered">
-        <label for="parSelect">Par for this hole: </label>
-        <select id="parSelect">
-          <option value="3">3</option>
-          <option value="4" selected>4</option>
-          <option value="5">5</option>
-        </select>
-      </div>
-      <div id="gameplay"></div>
-      <div class="centered">
-        <button onclick="nextCard()">Next Card</button>
-        <button onclick="toggleBoxScore()">Toggle Leaderboard</button>
-      </div>
-      <div id="boxScore" class="hidden"></div>
+  <!-- SETUP SCREEN -->
+  <div class="setup-screen active-screen" id="setupScreen">
+    <h1>Par for the Course</h1>
+    <div class="player-form">
+      <input type="text" id="playerName" placeholder="Enter name" autofocus />
+      <button id="addPlayerBtn">Add Player</button>
     </div>
-
-    <div class="end-screen hidden">
-      <h2>Game Over</h2>
-      <div id="finalResults"></div>
+    <div class="error-message" id="error"></div>
+    <ul id="playerList" aria-label="Player list" role="listbox"></ul>
+    <div class="note">Enter player names from tallest to shortest height.<br>Drag to reorder.</div>
+    <div class="centered">
+      <button id="startGameBtn">Start Game</button>
     </div>
   </div>
 
-  <div class="bottom-nav">
-    <button onclick="goToSettings()">Settings</button>
-    <button onclick="goToScores()">Scores</button>
-    <button onclick="window.open('https://www.thegamecrafter.com/games/par-for-the-course-classic','_blank')">Shop</button>
+  <!-- GAMEPLAY SCREEN -->
+  <div class="score-screen" id="scoreScreen" role="main" aria-live="polite" aria-atomic="true">
+    <div class="controls" style="margin-bottom:0.25rem;">
+      <button id="prevPlayerBtn" aria-label="Previous player">◀️</button>
+      <div class="player-name" id="playerNameDisplay" aria-live="polite"></div>
+      <button id="nextPlayerBtn" aria-label="Next player">▶️</button>
+    </div>
+    <div class="hole-banner" id="holeBanner">Hole 1</div>
+
+    <div class="score" id="currentScore">0</div>
+
+    <div class="stats" id="playerStats"></div>
+
+    <label for="parSelect" style="display:block; margin-top:1rem; text-align:center; font-weight:bold;">Par for this hole:</label>
+    <select id="parSelect" aria-label="Select par for current hole" title="Select par for current hole" style="display:block; margin:0 auto 1rem auto;">
+      <option value="3">3</option>
+      <option value="4" selected>4</option>
+      <option value="5">5</option>
+    </select>
+
+    <div class="score-grid" style="max-width: 320px; margin: 0 auto;">
+      <button id="penaltyBtn" title="Penalty (+1)">Penalty (+1)</button>
+      <button id="minusBtn" aria-label="Decrease score">-</button>
+      <button id="scratchBtn" title="Scratch (+2)">Scratch (+2)</button>
+      <button id="plusBtn" aria-label="Increase score">+</button>
+    </div>
+
+    <div class="centered" style="margin-top: 1rem;">
+      <button id="nextCardBtn" style="min-width: 120px;">Next Card</button>
+      <button id="toggleBoxScoreBtn" style="min-width: 120px;">Toggle Leaderboard</button>
+    </div>
+
+    <div id="boxScore" class="hidden" aria-label="Leaderboard box score"></div>
   </div>
 
-  <script>
-    let players = [];
-    let currentPlayerIndex = 0;
-    let currentHole = 1;
-    let par = 4;
-    let boxScores = [];
+  <!-- SETTINGS SCREEN -->
+  <div class="settings-screen" id="settingsScreen" role="region" aria-live="polite" aria-atomic="true">
+    <h2>Settings</h2>
 
-    function addPlayer() {
-      const nameInput = document.getElementById('playerName');
-      const name = nameInput.value.trim();
-      const errorBox = document.getElementById('error');
-      errorBox.textContent = '';
-      nameInput.classList.remove('error');
+    <div class="settings-section" aria-label="Add Player Section">
+      <label for="settingsPlayerName">Add Player</label>
+      <input type="text" id="settingsPlayerName" placeholder="New player name" />
+      <button id="settingsAddPlayerBtn">Add Player</button>
+      <div class="error-message" id="settingsError"></div>
+    </div>
 
-      if (!name) return;
+    <div class="settings-section" aria-label="Manual Score Edit Section">
+      <label for="editPlayerSelect">Select Player</label>
+      <select id="editPlayerSelect"></select>
 
-      if (players.some(p => p.name === name)) {
-        errorBox.textContent = 'Duplicate name. Try adding a 2 or using a nickname.';
-        nameInput.classList.add('error');
-        return;
-      }
+      <label for="editHoleInput">Hole Number</label>
+      <input type="number" id="editHoleInput" min="1" max="18" />
 
-      const player = { name, strokes: 0, penalties: 0, scratches: 0, total: 0, holes: [] };
-      players.push(player);
+      <label for="editStrokesInput">Strokes</label>
+      <input type="number" id="editStrokesInput" min="0" />
 
+      <label for="editPenaltiesInput">Penalties</label>
+      <input type="number" id="editPenaltiesInput" min="0" />
+
+      <label for="editScratchesInput">Scratches</label>
+      <input type="number" id="editScratchesInput" min="0" />
+
+      <button id="saveManualScoreBtn">Save Score</button>
+      <div class="error-message" id="manualScoreError"></div>
+    </div>
+
+    <div class="settings-section" aria-label="Theme Toggle Section">
+      <label for="themeToggle">Theme</label>
+      <select id="themeToggle" aria-label="Select app theme">
+        <option value="dark" selected>Black / Red / White</option>
+        <option value="light">White / Red / Black</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- SCORES SCREEN -->
+  <div class="scores-screen" id="scoresScreen" role="region" aria-live="polite" aria-atomic="true">
+    <h2>Saved Scores</h2>
+
+    <div id="saveSlotsContainer"></div>
+
+    <div class="scores-controls centered">
+      <button id="saveCurrentScoreBtn" style="min-width: 120px;">Save Current Scores</button>
+      <button id="emailScoresBtn" style="min-width: 120px;">Send Scores via Email</button>
+      <button id="endGameBtn" style="min-width: 120px; background:#f44336;">End Game</button>
+    </div>
+  </div>
+
+  <!-- END GAME SCREEN -->
+  <div class="end-screen" id="endScreen" role="region" aria-live="polite" aria-atomic="true">
+    <h2>Game Over</h2>
+    <div id="finalResults"></div>
+  </div>
+</div>
+
+<div class="bottom-nav" role="navigation" aria-label="Main navigation">
+  <button id="navSettingsBtn" aria-controls="settingsScreen" aria-selected="false" aria-label="Settings">Settings</button>
+  <button id="navScoresBtn" aria-controls="scoresScreen" aria-selected="false" aria-label="Scores">Scores</button>
+  <button id="navShopBtn" aria-label="Shop">Shop</button>
+</div>
+
+<script>
+  // --- Data Model ---
+  let players = [];
+  let currentPlayerIndex = 0;
+  let currentHole = 1;
+  let par = 4;
+  const maxHoles = 18;
+  let boxScores = []; // saved games [{timestamp, playersSnapshot}]
+  let theme = 'dark';
+
+  // --- Cached DOM ---
+  const setupScreen = document.getElementById('setupScreen');
+  const scoreScreen = document.getElementById('scoreScreen');
+  const settingsScreen = document.getElementById('settingsScreen');
+  const scoresScreen = document.getElementById('scoresScreen');
+  const endScreen = document.getElementById('endScreen');
+
+  const playerNameInput = document.getElementById('playerName');
+  const addPlayerBtn = document.getElementById('addPlayerBtn');
+  const playerList = document.getElementById('playerList');
+  const errorBox = document.getElementById('error');
+  const startGameBtn = document.getElementById('startGameBtn');
+
+  const playerNameDisplay = document.getElementById('playerNameDisplay');
+  const holeBanner = document.getElementById('holeBanner');
+  const currentScoreDisplay = document.getElementById('currentScore');
+  const playerStatsDisplay = document.getElementById('playerStats');
+
+  const parSelect = document.getElementById('parSelect');
+  const penaltyBtn = document.getElementById('penaltyBtn');
+  const scratchBtn = document.getElementById('scratchBtn');
+  const plusBtn = document.getElementById('plusBtn');
+  const minusBtn = document.getElementById('minusBtn');
+
+  const nextPlayerBtn = document.getElementById('nextPlayerBtn');
+  const prevPlayerBtn = document.getElementById('prevPlayerBtn');
+
+  const nextCardBtn = document.getElementById('nextCardBtn');
+  const toggleBoxScoreBtn = document.getElementById('toggleBoxScoreBtn');
+  const boxScoreDiv = document.getElementById('boxScore');
+
+  const navSettingsBtn = document.getElementById('navSettingsBtn');
+  const navScoresBtn = document.getElementById('navScoresBtn');
+  const navShopBtn = document.getElementById('navShopBtn');
+
+  // Settings DOM
+  const settingsPlayerNameInput = document.getElementById('settingsPlayerName');
+  const settingsAddPlayerBtn = document.getElementById('settingsAddPlayerBtn');
+  const settingsErrorBox = document.getElementById('settingsError');
+
+  const editPlayerSelect = document.getElementById('editPlayerSelect');
+  const editHoleInput = document.getElementById('editHoleInput');
+  const editStrokesInput = document.getElementById('editStrokesInput');
+  const editPenaltiesInput = document.getElementById('editPenaltiesInput');
+  const editScratchesInput = document.getElementById('editScratchesInput');
+  const saveManualScoreBtn = document.getElementById('saveManualScoreBtn');
+  const manualScoreError = document.getElementById('manualScoreError');
+
+  const themeToggleSelect = document.getElementById('themeToggle');
+
+  // Scores DOM
+  const saveSlotsContainer = document.getElementById('saveSlotsContainer');
+  const saveCurrentScoreBtn = document.getElementById('saveCurrentScoreBtn');
+  const emailScoresBtn = document.getElementById('emailScoresBtn');
+  const endGameBtn = document.getElementById('endGameBtn');
+
+  // --- Initialization ---
+  function init() {
+    // Attach event listeners
+    addPlayerBtn.onclick = addPlayer;
+    startGameBtn.onclick = startGame;
+
+    penaltyBtn.onclick = () => addPenalty(currentPlayerIndex);
+    scratchBtn.onclick = () => addScratch(currentPlayerIndex);
+    plusBtn.onclick = () => adjustScore(currentPlayerIndex, +1);
+    minusBtn.onclick = () => adjustScore(currentPlayerIndex, -1);
+
+    nextPlayerBtn.onclick = nextPlayer;
+    prevPlayerBtn.onclick = prevPlayer;
+
+    nextCardBtn.onclick = nextCard;
+    toggleBoxScoreBtn.onclick = toggleBoxScore;
+
+    navSettingsBtn.onclick = () => switchScreen('settings');
+    navScoresBtn.onclick = () => switchScreen('scores');
+    navShopBtn.onclick = () => window.open('https://www.thegamecrafter.com/games/par-for-the-course-classic','_blank');
+
+    // Settings
+    settingsAddPlayerBtn.onclick = addPlayerFromSettings;
+    saveManualScoreBtn.onclick = saveManualScore;
+    themeToggleSelect.onchange = changeTheme;
+
+    saveCurrentScoreBtn.onclick = saveCurrentScores;
+    emailScoresBtn.onclick = sendScoresEmail;
+    endGameBtn.onclick = confirmEndGame;
+
+    // Drag and drop on setup player list
+    initDragAndDrop();
+
+    // Load saved scores from localStorage
+    loadSavedScores();
+
+    applyTheme();
+
+    // Autofocus
+    playerNameInput.focus();
+  }
+
+  // --- Theme ---
+  function applyTheme() {
+    if(theme === 'light'){
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
+  }
+  function changeTheme() {
+    theme = themeToggleSelect.value;
+    applyTheme();
+  }
+
+  // --- Player Management ---
+  function addPlayer() {
+    const name = playerNameInput.value.trim();
+    if (!validateNewPlayerName(name, players)) {
+      showError(errorBox, 'Duplicate name. Try adding a 2 or using a nickname.');
+      playerNameInput.classList.add('error');
+      return;
+    }
+    playerNameInput.classList.remove('error');
+    clearError(errorBox);
+
+    players.push(createPlayer(name));
+    updatePlayerList();
+    playerNameInput.value = '';
+    playerNameInput.focus();
+  }
+
+  function addPlayerFromSettings() {
+    const name = settingsPlayerNameInput.value.trim();
+    if (!validateNewPlayerName(name, players)) {
+      showError(settingsErrorBox, 'Duplicate name. Try adding a 2 or using a nickname.');
+      settingsPlayerNameInput.classList.add('error');
+      return;
+    }
+    settingsPlayerNameInput.classList.remove('error');
+    clearError(settingsErrorBox);
+
+    players.push(createPlayer(name));
+    updatePlayerList();
+    updateEditPlayerSelect();
+    settingsPlayerNameInput.value = '';
+    settingsPlayerNameInput.focus();
+  }
+
+  function validateNewPlayerName(name, list) {
+    if (!name) return false;
+    return !list.some(p => p.name.toLowerCase() === name.toLowerCase());
+  }
+
+  function createPlayer(name) {
+    return {
+      name,
+      strokes: 0,
+      penalties: 0,
+      scratches: 0,
+      total: 0,
+      holes: [] // {strokes, par}
+    };
+  }
+
+  function updatePlayerList() {
+    playerList.innerHTML = '';
+    players.forEach((p, i) => {
       const li = document.createElement('li');
-      li.textContent = name;
+      li.textContent = p.name;
       li.draggable = true;
-      li.addEventListener('dragstart', dragStart);
-      li.addEventListener('dragover', dragOver);
-      li.addEventListener('drop', drop);
-      document.getElementById('playerList').appendChild(li);
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-grabbed', 'false');
+      li.dataset.index = i;
+      playerList.appendChild(li);
+    });
+    initDragAndDrop();
+  }
 
-      nameInput.value = '';
-      nameInput.focus();
+  function updateEditPlayerSelect() {
+    editPlayerSelect.innerHTML = '';
+    players.forEach((p, i) => {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = p.name;
+      editPlayerSelect.appendChild(option);
+    });
+  }
+
+  // --- Drag and Drop ---
+  let dragSrcEl = null;
+
+  function initDragAndDrop() {
+    const items = playerList.querySelectorAll('li');
+    items.forEach(item => {
+      item.addEventListener('dragstart', handleDragStart);
+      item.addEventListener('dragover', handleDragOver);
+      item.addEventListener('drop', handleDrop);
+      item.addEventListener('dragend', handleDragEnd);
+    });
+  }
+
+  function handleDragStart(e) {
+    dragSrcEl = e.target;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.innerHTML);
+    e.target.classList.add('dragging');
+    e.target.setAttribute('aria-grabbed', 'true');
+  }
+
+  function handleDragOver(e) {
+    if (e.preventDefault) e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+  }
+
+  function handleDrop(e) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (dragSrcEl !== this) {
+      const fromIndex = parseInt(dragSrcEl.dataset.index, 10);
+      const toIndex = parseInt(this.dataset.index, 10);
+      players.splice(toIndex, 0, players.splice(fromIndex, 1)[0]);
+      updatePlayerList();
+    }
+    return false;
+  }
+
+  function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    e.target.setAttribute('aria-grabbed', 'false');
+  }
+
+  // --- Game Start ---
+  function startGame() {
+    if(players.length < 1){
+      showError(errorBox, 'Add at least one player before starting.');
+      return;
+    }
+    clearError(errorBox);
+    currentPlayerIndex = 0;
+    currentHole = 1;
+    par = parseInt(parSelect.value);
+    players.forEach(p => {
+      p.strokes = 0; p.penalties = 0; p.scratches = 0; p.total = 0; p.holes = [];
+    });
+
+    setupScreen.classList.remove('active-screen');
+    scoreScreen.classList.add('active-screen');
+    settingsScreen.classList.remove('active-screen');
+    scoresScreen.classList.remove('active-screen');
+    endScreen.classList.remove('active-screen');
+
+    updateHoleBanner();
+    updatePlayerUI();
+  }
+
+  // --- UI Updates ---
+  function updateHoleBanner() {
+    holeBanner.textContent = `Hole ${currentHole}`;
+  }
+
+  function updatePlayerUI() {
+    const player = players[currentPlayerIndex];
+    playerNameDisplay.textContent = player.name;
+    currentScoreDisplay.textContent = player.strokes;
+    playerStatsDisplay.textContent = `Penalties: ${player.penalties} | Scratches: ${player.scratches} | Total: ${player.total}`;
+    parSelect.value = par;
+    // Update edit player select in settings in case needed
+    updateEditPlayerSelect();
+  }
+
+  // --- Player Navigation ---
+  function nextPlayer() {
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+    updatePlayerUI();
+  }
+  function prevPlayer() {
+    currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
+    updatePlayerUI();
+  }
+
+  // --- Score Adjustments ---
+  function adjustScore(index, delta) {
+    const player = players[index];
+    player.strokes = Math.max(0, player.strokes + delta);
+    if (index === currentPlayerIndex) updatePlayerUI();
+  }
+
+  function addPenalty(index) {
+    const player = players[index];
+    player.penalties++;
+    player.strokes++;
+    if (index === currentPlayerIndex) updatePlayerUI();
+  }
+
+  function addScratch(index) {
+    const player = players[index];
+    player.scratches++;
+    player.strokes += 2;
+    if (index === currentPlayerIndex) updatePlayerUI();
+  }
+
+  // --- Next Card (Hole) ---
+  function nextCard() {
+    if (players.length === 0) return;
+
+    // Save current hole data
+    players.forEach(p => {
+      p.holes.push({ strokes: p.strokes, par: par, penalties: p.penalties, scratches: p.scratches });
+      p.total += p.strokes;
+      p.strokes = 0;
+      p.penalties = 0;
+      p.scratches = 0;
+    });
+
+    currentHole++;
+    if (currentHole > maxHoles) {
+      endGame();
+      return;
     }
 
-    let dragged;
-    function dragStart(e) { dragged = e.target; }
-    function dragOver(e) { e.preventDefault(); }
-    function drop(e) {
-      e.preventDefault();
-      const list = document.getElementById('playerList');
-      const children = Array.from(list.children);
-      const newIndex = children.indexOf(e.target);
-      const oldIndex = children.indexOf(dragged);
+    // Update par from select
+    par = parseInt(parSelect.value);
 
-      if (newIndex > -1 && oldIndex > -1 && newIndex !== oldIndex) {
-        players.splice(newIndex, 0, players.splice(oldIndex, 1)[0]);
-        list.insertBefore(dragged, newIndex > oldIndex ? e.target.nextSibling : e.target);
-      }
+    // Sort players by total score (lowest first), stable sort
+    players.sort((a, b) => a.total - b.total || players.indexOf(a) - players.indexOf(b));
+    currentPlayerIndex = 0;
+    updateHoleBanner();
+    updatePlayerUI();
+    if (!boxScoreDiv.classList.contains('hidden')) {
+      renderBoxScore();
+    }
+  }
+
+  // --- Box Score Leaderboard ---
+  function toggleBoxScore() {
+    boxScoreDiv.classList.toggle('hidden');
+    if (!boxScoreDiv.classList.contains('hidden')) {
+      renderBoxScore();
+    }
+  }
+
+  function renderBoxScore() {
+    if(players.length === 0) {
+      boxScoreDiv.innerHTML = '<p>No players added.</p>';
+      return;
     }
 
-    function startGame() {
-      if (players.length === 0) return;
+    // Show front 9 / back 9 + totals + penalties + scratches
+    let html = '<table><thead><tr><th>Player</th>';
+    const frontCount = Math.min(9, currentHole-1);
+    const backCount = Math.max(0, currentHole - 1 - frontCount);
 
-      document.querySelector('.setup-screen').classList.add('hidden');
-      document.querySelector('.score-screen').classList.remove('hidden');
-
-      renderGameUI();
-      showPlayer(currentPlayerIndex);
+    // Front 9 headers
+    for(let i=1; i<=frontCount; i++){
+      html += `<th>F${i}</th>`;
     }
-
-    function renderGameUI() {
-      const gameplay = document.getElementById('gameplay');
-      gameplay.innerHTML = '';
-
-      players.forEach((player, index) => {
-        const div = document.createElement('div');
-        div.className = 'player-slide';
-        div.id = `player-${index}`;
-        div.innerHTML = `
-          <div class="controls">
-            <button onclick="prevPlayer()">◀️</button>
-            <div class="player-name">${player.name}</div>
-            <button onclick="nextPlayer()">▶️</button>
-          </div>
-          <div class="hole-banner">Hole ${currentHole}</div>
-          <div class="stats" id="stats-${index}">
-            Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}
-          </div>
-          <div class="score" id="score-${index}">${player.strokes}</div>
-          <div class="score-grid">
-            <button onclick="adjustScore(${index}, -1)">-</button>
-            <button onclick="adjustScore(${index}, 1)">+</button>
-            <button onclick="addPenalty(${index})">Penalty (+1)</button>
-            <button onclick="addScratch(${index})">Scratch (+2)</button>
-          </div>
-        `;
-        gameplay.appendChild(div);
-      });
+    // Back 9 headers
+    for(let i=1; i<=backCount; i++){
+      html += `<th>B${i}</th>`;
     }
+    html += '<th>Total</th><th>Pen</th><th>Scr</th></tr></thead><tbody>';
 
-    function showPlayer(index) {
-      document.querySelectorAll('.player-slide').forEach((el, i) => {
-        el.classList.toggle('active', i === index);
-      });
-    }
+    players.forEach(p => {
+      html += `<tr><td>${p.name}</td>`;
 
-    function nextPlayer() {
-      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-      showPlayer(currentPlayerIndex);
-    }
-
-    function prevPlayer() {
-      currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
-      showPlayer(currentPlayerIndex);
-    }
-
-    function adjustScore(index, delta) {
-      players[index].strokes += delta;
-      updateStats(index);
-    }
-
-    function addPenalty(index) {
-      players[index].penalties++;
-      players[index].strokes++;
-      updateStats(index);
-    }
-
-    function addScratch(index) {
-      players[index].scratches++;
-      players[index].strokes += 2;
-      updateStats(index);
-    }
-
-    function updateStats(index) {
-      const player = players[index];
-      document.getElementById(`score-${index}`).textContent = player.strokes;
-      document.getElementById(`stats-${index}`).textContent = `Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}`;
-    }
-
-    function nextCard() {
-      // Record current hole scores
-      players.forEach(p => {
-        p.holes.push({ strokes: p.strokes, par: par });
-        p.total += p.strokes;
-        p.strokes = 0;
-      });
-      par = parseInt(document.getElementById('parSelect').value);
-      currentHole++;
-
-      // Sort players by total score
-      players.sort((a, b) => a.total - b.total || players.indexOf(a) - players.indexOf(b));
-
-      currentPlayerIndex = 0;
-      renderGameUI();
-      showPlayer(currentPlayerIndex);
-    }
-
-    function toggleBoxScore() {
-      const box = document.getElementById('boxScore');
-      box.classList.toggle('hidden');
-      if (!box.classList.contains('hidden')) {
-        let html = '<table><tr><th>Player</th>';
-        for (let i = 0; i < currentHole - 1; i++) {
-          html += `<th>H${i + 1}</th>`;
+      // Front 9 holes
+      for(let i=0; i<frontCount; i++){
+        const hole = p.holes[i];
+        if(hole) {
+          const diff = hole.strokes - hole.par;
+          html += `<td class="${diff>0?'over-par':(diff<0?'under-par':'')}">${hole.strokes}</td>`;
+        } else {
+          html += '<td>–</td>';
         }
-        html += '<th>Total</th><th>Pen</th><th>Scr</th></tr>';
-        players.forEach(p => {
-          html += `<tr><td>${p.name}</td>`;
-          p.holes.forEach(h => html += `<td>${h.strokes}</td>`);
-          html += `<td>${p.total}</td><td>${p.penalties}</td><td>${p.scratches}</td></tr>`;
-        });
-        html += '</table>';
-        box.innerHTML = html;
       }
+      // Back 9 holes
+      for(let i=frontCount; i<frontCount+backCount; i++){
+        const hole = p.holes[i];
+        if(hole) {
+          const diff = hole.strokes - hole.par;
+          html += `<td class="${diff>0?'over-par':(diff<0?'under-par':'')}">${hole.strokes}</td>`;
+        } else {
+          html += '<td>–</td>';
+        }
+      }
+
+      // Totals and penalties/scratches
+      html += `<td>${p.total}</td><td>${p.penalties}</td><td>${p.scratches}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    boxScoreDiv.innerHTML = html;
+  }
+
+  // --- Settings: Manual Score Edit ---
+  function saveManualScore() {
+    manualScoreError.textContent = '';
+    const playerIndex = parseInt(editPlayerSelect.value);
+    const holeNum = parseInt(editHoleInput.value);
+    const strokes = parseInt(editStrokesInput.value);
+    const penalties = parseInt(editPenaltiesInput.value);
+    const scratches = parseInt(editScratchesInput.value);
+
+    if (
+      isNaN(playerIndex) ||
+      isNaN(holeNum) || holeNum < 1 || holeNum > maxHoles ||
+      isNaN(strokes) || strokes < 0 ||
+      isNaN(penalties) || penalties < 0 ||
+      isNaN(scratches) || scratches < 0
+    ) {
+      manualScoreError.textContent = 'Please enter valid values for all fields.';
+      return;
     }
-  </script>
-  <h6 align=center>v 1.0.01</h6>
+
+    const player = players[playerIndex];
+    if (!player) {
+      manualScoreError.textContent = 'Selected player does not exist.';
+      return;
+    }
+
+    // Extend holes array if needed
+    while (player.holes.length < holeNum) {
+      player.holes.push({ strokes: 0, par: 4, penalties:0, scratches:0 });
+    }
+
+    player.holes[holeNum - 1] = { strokes, par: 4, penalties, scratches }; // par not editable here
+    // Recalculate total
+    player.total = player.holes.reduce((sum, h) => sum + (h.strokes||0), 0);
+    player.penalties = player.holes.reduce((sum, h) => sum + (h.penalties||0), 0);
+    player.scratches = player.holes.reduce((sum, h) => sum + (h.scratches||0), 0);
+
+    manualScoreError.textContent = 'Score saved.';
+    manualScoreError.style.color = 'var(--green)';
+
+    // Reflect changes in gameplay UI if current player and hole match
+    if(currentHole === holeNum && players.indexOf(player) === currentPlayerIndex){
+      player.strokes = strokes;
+      player.penalties = penalties;
+      player.scratches = scratches;
+      player.total = player.total; // redundant but clear
+      updatePlayerUI();
+    }
+
+    // Clear message after 3s
+    setTimeout(() => {
+      manualScoreError.textContent = '';
+      manualScoreError.style.color = 'var(--red)';
+    }, 3000);
+  }
+
+  // --- Save & Load Scores from localStorage ---
+  function saveCurrentScores() {
+    if(players.length === 0){
+      alert('No players to save.');
+      return;
+    }
+    const now = new Date();
+    const timestamp = now.toISOString();
+    const snapshot = JSON.stringify(players);
+    const slot = getEmptySaveSlot();
+
+    if(slot === -1){
+      alert('All 3 save slots are full. Please delete a slot before saving.');
+      return;
+    }
+
+    const saves = loadSavedScores();
+    saves[slot] = { timestamp, playersSnapshot: snapshot };
+    localStorage.setItem('par_course_saves', JSON.stringify(saves));
+    alert(`Game saved in slot ${slot + 1}`);
+    renderSaveSlots();
+  }
+
+  function loadSavedScores(){
+    const raw = localStorage.getItem('par_course_saves');
+    let saves;
+    try {
+      saves = raw ? JSON.parse(raw) : [null, null, null];
+      if(!Array.isArray(saves) || saves.length !==3){
+        saves = [null,null,null];
+      }
+    } catch {
+      saves = [null,null,null];
+    }
+    renderSaveSlots(saves);
+    return saves;
+  }
+
+  function renderSaveSlots(saves) {
+    saves = saves || loadSavedScores();
+    saveSlotsContainer.innerHTML = '';
+    for(let i=0; i<3; i++){
+      const save = saves[i];
+      const div = document.createElement('div');
+      div.className = 'save-slot' + (save ? '' : ' empty');
+      div.textContent = save ? `Slot ${i+1} - Saved: ${new Date(save.timestamp).toLocaleString()}` : `Slot ${i+1} - Empty`;
+      if(save){
+        div.onclick = () => loadSaveSlot(i);
+        // Add delete button inside slot
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.style.float = 'right';
+        delBtn.style.background = '#f44336';
+        delBtn.style.color = '#fff';
+        delBtn.style.border = 'none';
+        delBtn.style.padding = '0 6px';
+        delBtn.style.cursor = 'pointer';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          if(confirm(`Delete save slot ${i+1}?`)){
+            const allSaves = loadSavedScores();
+            allSaves[i] = null;
+            localStorage.setItem('par_course_saves', JSON.stringify(allSaves));
+            renderSaveSlots();
+          }
+        };
+        div.appendChild(delBtn);
+      }
+      saveSlotsContainer.appendChild(div);
+    }
+  }
+
+  function getEmptySaveSlot(){
+    const saves = loadSavedScores();
+    for(let i=0; i<saves.length; i++){
+      if(!saves[i]) return i;
+    }
+    return -1;
+  }
+
+  function loadSaveSlot(index) {
+    const saves = loadSavedScores();
+    const save = saves[index];
+    if(!save){
+      alert('Save slot empty.');
+      return;
+    }
+    if(!confirm('Loading a saved game will overwrite current progress. Continue?')) return;
+
+    try {
+      const loadedPlayers = JSON.parse(save.playersSnapshot);
+      if(Array.isArray(loadedPlayers) && loadedPlayers.length>0){
+        players = loadedPlayers;
+        currentHole = players[0].holes.length + 1;
+        currentHole = Math.min(currentHole, maxHoles);
+        currentPlayerIndex = 0;
+        par = 4;
+        setupScreen.classList.remove('active-screen');
+        scoreScreen.classList.add('active-screen');
+        settingsScreen.classList.remove('active-screen');
+        scoresScreen.classList.remove('active-screen');
+        endScreen.classList.remove('active-screen');
+        updateHoleBanner();
+        updatePlayerUI();
+        boxScoreDiv.classList.add('hidden');
+        alert('Game loaded.');
+      } else {
+        alert('Saved data corrupted or empty.');
+      }
+    } catch(e){
+      alert('Failed to load saved data.');
+    }
+  }
+
+  // --- Email Scores ---
+  function sendScoresEmail() {
+    if(players.length === 0){
+      alert('No scores to send.');
+      return;
+    }
+    const subject = encodeURIComponent('Par for the Course Scores');
+    let body = 'Final Scores:\n\n';
+    players.forEach(p => {
+      body += `${p.name}: ${p.total} strokes (Penalties: ${p.penalties}, Scratches: ${p.scratches})\n`;
+    });
+    const mailtoLink = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+  }
+
+  // --- End Game ---
+  function confirmEndGame() {
+    if(!confirm('Are you sure you want to end the current game? This cannot be undone.')){
+      return;
+    }
+    endGame();
+  }
+
+  function endGame() {
+    setupScreen.classList.remove('active-screen');
+    scoreScreen.classList.remove('active-screen');
+    settingsScreen.classList.remove('active-screen');
+    scoresScreen.classList.remove('active-screen');
+    endScreen.classList.add('active-screen');
+    boxScoreDiv.classList.add('hidden');
+
+    // Sort players by total
+    players.sort((a,b) => a.total - b.total);
+
+    // Display final results
+    const finalResults = document.getElementById('finalResults');
+    finalResults.innerHTML = '';
+
+    if(players.length === 0){
+      finalResults.textContent = 'No players found.';
+      return;
+    }
+
+    // Find winner(s)
+    const bestScore = players[0].total;
+    const winners = players.filter(p => p.total === bestScore);
+
+    const winnerDiv = document.createElement('div');
+    winnerDiv.className = 'winner';
+    winnerDiv.textContent = winners.length === 1 ?
+      `Winner: ${winners[0].name} (${winners[0].total} strokes)` :
+      `Winners (tie): ${winners.map(w => w.name).join(', ')} (${bestScore} strokes)`;
+    finalResults.appendChild(winnerDiv);
+
+    // List all players with scores
+    players.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'player-result';
+      div.innerHTML = `<span class="name">${p.name}</span><span class="score">${p.total} strokes</span>`;
+      finalResults.appendChild(div);
+    });
+
+    // Facebook share link with prefilled text
+    const shareText = encodeURIComponent(`I just finished a game of Par for the Course! Winner: ${winners[0].name} with ${bestScore} strokes.`);
+    const shareURL = encodeURIComponent('https://www.thegamecrafter.com/games/par-for-the-course-classic');
+    const fbShareLink = `https://www.facebook.com/sharer/sharer.php?u=${shareURL}&quote=${shareText}`;
+
+    const shareDiv = document.createElement('div');
+    shareDiv.className = 'share';
+    shareDiv.innerHTML = `<a href="${fbShareLink}" target="_blank" rel="noopener noreferrer" aria-label="Share results on Facebook">Share on Facebook</a>`;
+    finalResults.appendChild(shareDiv);
+  }
+
+  // --- Screen Switching ---
+  function switchScreen(screen) {
+    setupScreen.classList.remove('active-screen');
+    scoreScreen.classList.remove('active-screen');
+    settingsScreen.classList.remove('active-screen');
+    scoresScreen.classList.remove('active-screen');
+    endScreen.classList.remove('active-screen');
+
+    navSettingsBtn.setAttribute('aria-selected', 'false');
+    navScoresBtn.setAttribute('aria-selected', 'false');
+
+    switch(screen) {
+      case 'settings':
+        settingsScreen.classList.add('active-screen');
+        navSettingsBtn.setAttribute('aria-selected', 'true');
+        break;
+      case 'scores':
+        scoresScreen.classList.add('active-screen');
+        navScoresBtn.setAttribute('aria-selected', 'true');
+        break;
+      case 'setup':
+        setupScreen.classList.add('active-screen');
+        break;
+      case 'score':
+        scoreScreen.classList.add('active-screen');
+        break;
+      default:
+        setupScreen.classList.add('active-screen');
+    }
+  }
+
+  // --- Helpers ---
+  function showError(container, message) {
+    container.textContent = message;
+  }
+  function clearError(container) {
+    container.textContent = '';
+  }
+
+  // --- Init ---
+  init();
+</script>
+  <h6 align=center>v 1.0.05</h6>
 </body>
 </html>
