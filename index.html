@@ -78,6 +78,8 @@
     display: none;
     flex-direction: column;
     align-items: center;
+    padding: 1rem;
+    min-height: 300px; /* ensure visible height */
   }
   .player-slide.active {
     display: flex;
@@ -90,19 +92,20 @@
     margin-bottom: 0.5rem;
   }
   .player-name {
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: bold;
     flex-grow: 1;
     text-align: center;
   }
   .stats {
-    margin-top: 0.5rem;
-    font-size: 1.1rem;
+    margin-top: 1rem;
+    font-size: 1.2rem;
   }
   .score {
-    font-size: 5rem;
+    font-size: 6rem;
     margin: 1rem 0;
     font-weight: 700;
+    user-select: none;
   }
   .score-grid {
     display: grid;
@@ -112,7 +115,7 @@
     max-width: 320px;
   }
   .score-grid button {
-    font-size: 1.8rem;
+    font-size: 2rem;
     padding: 1rem;
     background: #222;
     color: var(--text);
@@ -203,7 +206,7 @@
 
   function dragStart(e) {
     dragged = e.target;
-    console.log('Drag start:', dragged.textContent);
+    // Add dragging style if desired
   }
 
   function dragOver(e) {
@@ -225,25 +228,20 @@
   }
 
   function startGame() {
-    console.log('Start game clicked');
     if (players.length === 0) {
-      console.warn('No players added');
+      alert('Add at least one player to start the game.');
       return;
     }
     currentPlayerIndex = 0;
-    console.log('Players at start:', players);
 
-    const setupScreen = document.querySelector('.setup-screen');
-    const scoreScreen = document.querySelector('.score-screen');
-    setupScreen.classList.add('hidden');
-    scoreScreen.classList.remove('hidden');
+    document.querySelector('.setup-screen').classList.add('hidden');
+    document.querySelector('.score-screen').classList.remove('hidden');
 
     renderGameUI();
     showPlayer(currentPlayerIndex);
   }
 
   function renderGameUI() {
-    console.log('Rendering game UI');
     const gameplay = document.getElementById('gameplay');
     gameplay.innerHTML = '';
 
@@ -272,22 +270,13 @@
     });
 
     showPlayer(currentPlayerIndex);
-
-    // Debug log all player-slide divs and their classes
-    const slides = document.querySelectorAll('.player-slide');
-    console.log('Player slides:', slides.length);
-    slides.forEach((slide, i) => {
-      console.log(`Slide ${i}: classes =`, slide.className);
-    });
   }
 
   function showPlayer(index) {
-    console.log('Showing player at index:', index);
     const slides = document.querySelectorAll('.player-slide');
     slides.forEach((el, i) => {
       if (i === index) {
         el.classList.add('active');
-        console.log(`Activated slide ${i}`);
       } else {
         el.classList.remove('active');
       }
@@ -310,13 +299,13 @@
   }
 
   function addPenalty(index) {
-    players[index].penalties += 1;
-    players[index].strokes += 1;
+    players[index].penalties++;
+    players[index].strokes++;
     updateStats(index);
   }
 
   function addScratch(index) {
-    players[index].scratches += 1;
+    players[index].scratches++;
     players[index].strokes += 2;
     updateStats(index);
   }
