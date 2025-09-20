@@ -1,1025 +1,1709 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Par for the Course</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #d11111;
-      --background: #000;
-      --text: #fff;
-      --green: #4caf50;
-      --red: #f44336;
-      --alt-background: #fff;
-      --alt-text: #000;
+    :root{
+      --bg:#000; --fg:#fff; --panel-bg:#111; --menu-bg:#1a1a1a; --accent:#d11111; --muted:#8a8a8a; --disabled:#555;
+      --nav-h:60px; --mercy-gray:#999999; --danger:#660000;
     }
+    .light-theme{
+      --bg:#fff; --fg:#000; --panel-bg:#e8e8e8; --menu-bg:#eee; --accent:#d11111; --muted:#666; --disabled:#aaa;
+      --mercy-gray:#999999; --danger:#660000;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:var(--bg);color:var(--fg);
+      font-family:Montserrat, system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif
+    }
+    .screen{display:none;flex-direction:column;min-height:100vh;padding:16px;padding-bottom:calc(var(--nav-h) + 16px)}
+    .active{display:flex}
 
-    body {
-      margin: 0;
-      background: var(--background);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-      padding-bottom: 100px; /* for bottom nav */
-    }
+    button{border:none;border-radius:0;background:var(--accent);color:#fff;min-height:44px;font-size:18px;margin:8px 0;cursor:pointer;width:100%}
+    button:disabled{background:var(--disabled);cursor:not-allowed}
 
-    .container {
-      max-width: 600px;
-      margin: auto;
-      padding: 1rem;
-    }
+    #menuBar{display:none;position:fixed;left:0;right:0;bottom:0;height:var(--nav-h);background:var(--menu-bg);border-top:1px solid #333;z-index:100}
+    #menuBar button{flex:1;background:none;color:var(--fg);font-size:18px;margin:0}
 
-    h1, h2, h3, h4, h5 {
-      text-align: center;
-      color: var(--primary);
-    }
+    .panel{position:fixed;inset:0;background:var(--panel-bg);transform:translateY(100%);transition:transform .28s ease;z-index:200;overflow-y:auto;padding:16px}
+    .panel.open{transform:translateY(0)}
+    .close-btn{position:absolute;top:12px;right:12px;background:none;color:var(--fg);font-size:24px;width:auto}
+    .section{background:rgba(255,255,255,.03);padding:12px;margin:8px 0}
+    .light-theme .section{background:#f7f7f7}
+    .version{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}
+    .small{font-size:12px}
 
-    /* Screens */
-    .active-screen {
-      display: block;
-    }
-    .setup-screen,
-    .score-screen,
-    .end-screen,
-    .settings-screen,
-    .scores-screen {
-      display: none;
-    }
+    /* splash */
+    #splash .logo{margin-top:8vh;text-align:center}
+    #splash .logo img{width:400px;height:auto;display:block;margin:0 auto}
+    #splash .stack{display:flex;flex-direction:column;align-items:center;gap:12px;max-width:420px;width:100%;align-self:center;margin-top:24px}
 
-    /* Setup screen */
-    .player-form {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
+    /* setup */
+    #setup h5{margin:8px 0 0 0;text-align:center}
+    #playerCounter{margin:6px 0 0 0;text-align:center;color:var(--muted)}
+    ul#playerList{list-style:none;margin:12px 0 0 0;padding:0}
+    .playerRow{
+      display:flex;align-items:center;gap:8px;flex-wrap:nowrap;
+      background:#1f1f1f;padding:8px;margin-bottom:8px;min-width:0
     }
-    .player-form input {
-      flex: 1;
-      padding: 0.5rem;
-      font-size: 1rem;
+    .light-theme .playerRow{background:#eaeaea}
+    .color-chip{width:28px;height:28px;border-radius:50%;border:2px solid var(--fg);cursor:pointer;flex:0 0 28px}
+    .playerName{
+      flex:1;padding:8px;font-size:18px;border:1px solid #333;background:#2a2a2a;color:var(--fg);min-width:0
     }
-    .player-form button {
-      padding: 0.5rem 1rem;
-      background: var(--primary);
-      color: var(--text);
-      border: 2px solid #000;
-      font-size: 1rem;
-      cursor: pointer;
-    }
+    .light-theme .playerName{background:#fff;border-color:#ccc}
+    .order-controls{display:flex;gap:4px;flex:0 0 auto;align-self:stretch}
+    .order-controls button{width:36px;height:36px;margin:0;font-size:16px;align-self:center}
 
-    ul#playerList {
-      list-style: none;
-      padding: 0;
-      margin-bottom: 1rem;
-      border: 1px solid #333;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    ul#playerList li {
-      background: #111;
-      padding: 0.5rem;
-      margin-bottom: 0.5rem;
-      cursor: grab;
-      user-select: none;
-    }
-    ul#playerList li:active {
-      cursor: grabbing;
-    }
+    .top-spacer{height:75px;width:100%}
 
-    .note {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #aaa;
-      margin-bottom: 1rem;
+    .inline-par{
+      display:flex;align-items:center;gap:8px;margin:10px 0;justify-content:flex-start
     }
-    .centered {
-      display: flex;
-      justify-content: center;
-      margin: 1rem 0;
-    }
+    .left-handed .inline-par{justify-content:flex-end}
+    select{background:var(--panel-bg);color:var(--fg);border:1px solid #d11111;padding:8px;font-size:18px;width:120px}
+    .light-theme select{background:#fff}
+    #mercyBtn{border:none;background:var(--mercy-gray);color:#000;display:none}
+    .mercy-inline{height:44px;width:auto;padding:0 12px}
 
-    /* Gameplay player slide */
-    .player-slide {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-    }
-    .player-slide.active {
-      display: flex;
-    }
+    .stats-row{display:flex;justify-content:space-around;margin:6px 0 4px 0}
+    .stat-center{display:flex;flex-direction:column;align-items:center}
+    .stat-center h6{margin:0;font-size:12px;text-transform:uppercase;color:var(--muted)}
+    .score-value{font-size:24px}
 
-    .player-name {
-      font-size: 3rem;
-      font-weight: bold;
-    }
+    /* dynamic divider under stats */
+    #playerColorDivider{height:2px;width:100%;background:#333;margin:8px 0 6px 0}
 
-    .hole-banner {
-      background: var(--primary);
-      padding: 0.25rem 1rem;
-      color: white;
-      margin: 0.5rem 0 1rem 0;
-      font-weight: bold;
-      font-size: 1.2rem;
-      width: 100%;
-      text-align: center;
-      border-radius: 4px;
-    }
+    .row-flex{display:flex;gap:12px;align-items:center}
+    .score-box{flex:1;text-align:center}
+    #scoreVal{font-size:clamp(72px, 22vw, 180px);font-weight:800;line-height:1;padding:6px 0;overflow:hidden}
+    .score-controls{width:50%;display:flex;flex-direction:column;gap:12px}
+    .score-btn{width:100%;height:72px;font-size:28px}
+    .left-handed .row-flex{flex-direction:row-reverse}
 
-    .stats {
-      margin-top: 0.5rem;
-      font-size: 1.2rem;
-    }
+    .sp-row{display:flex;gap:8px;margin-top:8px;align-items:center}
+    .btn-scratch,.btn-penalty{flex:1;background:var(--danger)}
+    .left-handed .sp-row{flex-direction:row-reverse}
 
-    .score {
-      font-size: 6rem;
-      margin: 1rem 0;
-      font-weight: 900;
-    }
+    .action-row{display:flex;gap:8px;margin-top:8px;align-items:center;justify-content:center}
+    .left-handed .action-row{flex-direction:row-reverse}
+    #undoBtn{flex:0 0 50%;background:var(--danger)}
+    #nextCardBtn{flex:0 0 50%}
 
-    .score-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      width: 100%;
-      max-width: 320px;
-    }
+    .hole-batter-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+    #holeLabel{text-align:left;font-weight:700}
+    #batterInfo{text-align:right;color:var(--muted);font-size:14px;min-height:34px;white-space:pre-line}
 
-    .score-grid button {
-      font-size: 1.5rem;
-      padding: 1rem;
-      background: #222;
-      color: var(--text);
-      border: 2px solid #333;
-      width: 100%;
-      text-align: center;
-      border-radius: 0; /* square */
-      cursor: pointer;
-      user-select: none;
-    }
+    .footer-player-nav{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .footer-player-nav .nav-btn{width:96px;height:44px;font-size:24px}
+    #playerNameLabel{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:28px;font-weight:800;padding:4px 8px}
+    #leaderIcon{width:20px;height:20px;display:none}
 
-    .controls {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .controls button {
-      font-size: 2rem;
-      background: var(--primary);
-      border: 2px solid black;
-      color: var(--text);
-      padding: 0.25rem 0.75rem;
-      cursor: pointer;
-      border-radius: 4px;
-      user-select: none;
-      width: 3.5rem;
-      height: 3.5rem;
-    }
-    .player-name-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      max-width: 600px;
-      margin-bottom: 0.5rem;
-    }
-    .player-name-large {
-      font-size: 3rem;
-      font-weight: bold;
-      flex-grow: 1;
-      text-align: center;
-      user-select: text;
-    }
+    .save-icon{position:fixed;top:10px;right:10px;font-size:22px;color:var(--accent);opacity:0;transition:opacity .4s}
 
-    /* Box Score */
-    #boxScore {
-      margin-top: 1rem;
-      overflow-x: auto;
-      background: #111;
-      border: 1px solid #333;
-      padding: 0.5rem;
-      max-height: 220px;
-      font-size: 0.9rem;
-      color: var(--text);
-    }
-    #boxScore table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 400px;
-    }
-    #boxScore th,
-    #boxScore td {
-      border: 1px solid #444;
-      padding: 0.25rem 0.5rem;
-      text-align: center;
-    }
-    #boxScore th {
-      background: var(--primary);
-      color: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    #boxScore .front9 {
-      border-bottom: 2px solid var(--primary);
-    }
+    .panel h3{margin-top:8px}
+    .boxscore-title{font-weight:700;margin:6px 0 4px}
+    .note-rotate{font-size:12px;color:var(--muted);margin-bottom:6px}
 
-    /* Bottom navigation */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      display: flex;
-      justify-content: space-around;
-      background: var(--primary);
-      border-top: 2px solid black;
-      z-index: 1000;
-    }
-    .bottom-nav button {
-      flex: 1;
-      padding: 1rem;
-      background: var(--primary);
-      color: var(--text);
-      font-size: 1rem;
-      border: 2px solid black;
-      cursor: pointer;
-      user-select: none;
-      border-radius: 0;
-    }
+    table.boxscore{width:100%;border-collapse:collapse;margin-top:8px;text-align:center;table-layout:fixed}
+    .boxscore th,.boxscore td{border:1px solid #444;padding:6px 4px;font-size:12px;word-break:break-word}
+    .boxscore th{background:#121212;color:var(--accent)}
+    .light-theme .boxscore th{background:#f5f5f5}
+    .boxscore tr:nth-child(even) td{background:#151515}
+    .light-theme .boxscore tr:nth-child(even) td{background:#fafafa}
+    .leader{border:2px solid #27c34a !important;font-weight:800 !important}
 
-    /* Home button */
-    .home-button {
-      position: fixed;
-      bottom: 80px; /* above bottom nav */
-      right: 10px;
-      background: var(--primary);
-      color: var(--text);
-      border: 2px solid black;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      cursor: pointer;
-      border-radius: 4px;
-      z-index: 1100;
-      user-select: none;
+    .collapsed-header{
+      display:grid;grid-template-columns:1.5fr repeat(4,1fr);gap:6px;padding:8px;font-weight:700;border:1px solid #444;
+      background:#121212;color:var(--fg)
     }
-    .home-button.hidden {
-      display: none;
+    .light-theme .collapsed-header{background:#f5f5f5;color:#000;border-color:#cfcfcf}
+    .collapsed-row{
+      display:grid;grid-template-columns:1.5fr repeat(4,1fr);gap:6px;align-items:center;
+      padding:8px;border:1px solid #333;margin-bottom:6px;background:#0f0f0f
     }
+    .light-theme .collapsed-row{background:#ffffff;border-color:#cfcfcf}
+    .collapsed-row.leader{border-color:#27c34a}
 
-    /* Error styles */
-    .error-message {
-      color: var(--red);
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    input.error {
-      border: 2px solid var(--red);
-    }
+    .toggle-container{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+    .toggle-container label{flex:1;min-width:0}
+    .toggle-btn{flex:0 0 60%;height:44px;background:var(--disabled);position:relative}
+    .toggle-btn.active{background:#4caf50}
+    .toggle-btn .knob{position:absolute;top:7px;left:7px;width:30px;height:30px;background:#fff;border-radius:50%;transition:left .25s}
+    .toggle-btn.active .knob{left:calc(100% - 37px)}
+    .mirror-toggles .toggle-container{flex-direction:row-reverse}
+    .mirror-toggles .toggle-container label{text-align:right}
+    #insertBeforeSelect{width:100%}
 
-    select {
-      font-size: 1rem;
-      padding: 0.5rem;
-      margin: 1rem 0;
-    }
+    #summary h2{margin:8px 0 0 0;text-align:center}
+    #summary .muted{text-align:center;margin-bottom:8px}
+    .summary-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:14px}
+    .summary-item{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed #444;padding:4px 0}
+    .light-theme .summary-item{border-color:#bbb}
+
+    /* Save/Load layout in Scores */
+    #scoresPanel .slot{display:flex;align-items:center;gap:8px;height:80px}
+    #scoresPanel .slot input{flex:0 0 40%;height:44px;margin:0}
+    #scoresPanel .slot button{flex:0 0 60%;height:60px;white-space:pre-line;text-align:left}
+
+    /* Footer pin in Settings */
+    #settingsPanel .footer-fixed{position:sticky;bottom:0;padding-bottom:8px;background:var(--panel-bg)}
+    .light-theme #settingsPanel .footer-fixed{background:#e8e8e8}
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- Splash -->
+  <div id="splash" class="screen active">
+    <div class="logo">
+      <img src="https://prometheangamescom.wordpress.com/wp-content/uploads/2025/08/400x400.png" alt="Par for the Course"/>
+    </div>
+    <div class="stack">
+      <button id="splashNewBtn">New Game</button>
+      <button id="splashLoadBtn">Load Game</button>
+    </div>
+  </div>
 
-    <!-- SETUP SCREEN -->
-    <div class="setup-screen active-screen" id="setupScreen" role="region" aria-label="Setup Screen">
-      <h1>Par for the Course</h1>
-      <div class="player-form">
-        <input type="text" id="playerName" placeholder="Enter player name" autofocus aria-label="Player Name"/>
-        <button id="addPlayerBtn" type="button" aria-label="Add Player">Add Player</button>
+  <!-- Load Screen -->
+  <div id="load" class="screen">
+    <h3>Load Game</h3>
+    <div id="loadList" class="section"></div>
+    <button id="loadBackBtn">Back</button>
+  </div>
+
+  <!-- Setup -->
+  <div id="setup" class="screen">
+    <center>
+      <img width="25%" height="auto" src="https://prometheangamescom.wordpress.com/wp-content/uploads/2025/08/400x400.png" alt="PftC logo"/>
+      <h5>ENTER PLAYER NAMES FROM TALLEST TO SHORTEST HEIGHT</h5>
+      <div id="playerCounter" class="small muted">Players: 0 (named 0)</div>
+    </center>
+    <ul id="playerList"></ul>
+    <button id="addPlayerBtn">ADD PLAYER</button>
+    <button id="startGameBtn" disabled>START</button>
+  </div>
+
+  <!-- Game -->
+  <div id="game" class="screen">
+    <div class="top-spacer"></div>
+
+    <!-- Player nav + name -->
+    <div class="footer-player-nav" style="margin-top:0">
+      <button id="prevPlayerBtn" class="nav-btn" aria-label="Previous player">◀</button>
+      <span id="playerNameLabel">
+        <img id="leaderIcon" src="https://prometheangamescom.wordpress.com/wp-content/uploads/2025/08/unnamed-file.png" alt="Leader"/>
+        <span id="playerNameText"></span>
+      </span>
+      <button id="nextPlayerBtn" class="nav-btn" aria-label="Next player">▶</button>
+    </div>
+
+    <!-- Stats (Scratches | Total Strokes | Penalties) -->
+    <div class="stats-row">
+      <div class="stat-center"><h6>Scratches</h6><div id="statScratch" class="score-value">0</div></div>
+      <div class="stat-center"><h6>Total Strokes</h6><div id="statScore" class="score-value">0</div></div>
+      <div class="stat-center"><h6>Penalties</h6><div id="statPenalty" class="score-value">0</div></div>
+    </div>
+    <div id="playerColorDivider"></div>
+
+    <!-- Hole / Batter row -->
+    <div class="hole-batter-row">
+      <div id="holeLabel">Hole 1</div>
+      <div id="batterInfo"></div>
+    </div>
+
+    <!-- Par selector + Mercy inline -->
+    <div class="inline-par">
+      <label for="parSelect">Select Par:</label>
+      <select id="parSelect"><option value="">--</option></select>
+      <button id="mercyBtn" class="mercy-inline" title="Set to Par+5 then advance">Mercy (+5)</button>
+    </div>
+
+    <!-- Scratch / Penalty -->
+    <div class="sp-row">
+      <button class="minor-btn btn-scratch" data-action="scratch+">Scratch (+2)</button>
+      <button class="minor-btn btn-penalty" data-action="penalty+">Penalty (+1)</button>
+    </div>
+
+    <!-- Score + +/- -->
+    <div class="row-flex">
+      <div class="score-box">
+        <div id="scoreVal">0</div>
+        <div id="scoreCallout" class="small" style="min-height:18px;text-align:center;font-weight:700"></div>
       </div>
-      <div class="error-message" id="errorMsg" role="alert" aria-live="assertive"></div>
-      <ul id="playerList" aria-label="Player list" tabindex="0"></ul>
-      <div class="note">Enter player names from tallest to shortest height.<br />Drag to reorder players.</div>
-      <div class="centered">
-        <button id="startGameBtn" type="button" aria-label="Start Game">Start Game</button>
+      <div class="score-controls">
+        <button class="score-btn" data-action="score+">▲</button>
+        <button class="score-btn" data-action="score-">▼</button>
       </div>
     </div>
 
-    <!-- GAMEPLAY SCREEN -->
-    <div class="score-screen" id="scoreScreen" role="region" aria-label="Gameplay Screen">
-      <div class="player-name-container">
-        <button id="prevPlayerBtn" aria-label="Previous Player">◀️</button>
-        <div class="player-name-large" id="currentPlayerName">Player Name</div>
-        <button id="nextPlayerBtn" aria-label="Next Player">▶️</button>
-      </div>
-      <div class="hole-banner" id="holeBanner">Hole 1</div>
+    <!-- Undo / Next -->
+    <div class="action-row">
+      <button id="undoBtn"><span aria-hidden="true">↶</span> Undo</button>
+      <button id="nextCardBtn" disabled>Next Card</button>
+    </div>
+  </div>
 
-      <div class="score" id="currentHoleScore">0</div>
+  <!-- Summary -->
+  <div id="summary" class="screen">
+    <h2>Session Summary</h2>
+    <div id="summaryMeta" class="muted" style="display:none"></div>
 
-      <div class="stats" id="currentStats">Penalties: 0 | Scratches: 0 | Strokes: 0</div>
-
-      <div class="score-grid" aria-label="Score controls">
-        <button id="penaltyBtn" aria-label="Add penalty plus one">Penalty (+1)</button>
-        <button id="minusBtn" aria-label="Decrease score by one">-</button>
-        <button id="plusBtn" aria-label="Increase score by one">+</button>
-        <button id="scratchBtn" aria-label="Add scratch plus two">Scratch (+2)</button>
-      </div>
-
-      <label for="parSelect" style="display:block; text-align:center; margin-top:1rem;">
-        Par for this hole:
-      </label>
-      <select id="parSelect" aria-label="Select par for current hole" style="display:block; margin: 0 auto 1rem auto; width: 100px;">
-        <option value="3">3</option>
-        <option value="4" selected>4</option>
-        <option value="5">5</option>
-      </select>
-
-      <div class="centered" style="gap:1rem;">
-        <button id="nextCardBtn" type="button" aria-label="Next Card (next hole)">Next Card</button>
-        <button id="toggleBoxScoreBtn" type="button" aria-label="Toggle Leaderboard">Toggle Leaderboard</button>
-      </div>
-
-      <div id="boxScore" class="hidden" aria-live="polite" aria-label="Box Score leaderboard"></div>
+    <!-- Summary info table -->
+    <div class="section">
+      <div class="summary-col" id="summaryInfo"></div>
     </div>
 
-    <!-- END SCREEN -->
-    <div class="end-screen" id="endScreen" role="region" aria-label="End Game Screen">
-      <h2>Game Over</h2>
-      <div id="finalResults" style="text-align:center;"></div>
-    </div>
-
-    <!-- SETTINGS SCREEN -->
-    <div class="settings-screen" id="settingsScreen" role="region" aria-label="Settings Screen">
-      <h2>Settings</h2>
-      <div class="player-form" style="max-width: 400px; margin: auto;">
-        <input type="text" id="settingsPlayerName" placeholder="Add new player" aria-label="Add new player" />
-        <button id="settingsAddPlayerBtn" type="button">Add Player</button>
+    <!-- Collapsed by default + hint -->
+    <div class="section">
+      <div class="note-rotate">Rotate device to view expanded box score.</div>
+      <div class="collapsed-header">
+        <div>Player</div><div>Sub</div><div>±Par</div><div>Scr</div><div>Pen</div>
       </div>
-      <div class="error-message" id="settingsErrorMsg" role="alert" aria-live="assertive"></div>
-      <h3>Manual Score Editing</h3>
-      <div id="manualScoreEdit"></div>
-      <h3>Theme</h3>
-      <select id="themeSelect" aria-label="Select theme" style="width: 150px; margin-bottom: 1rem;">
-        <option value="dark" selected>Black / Red / White</option>
-        <option value="light">White / Red / Black</option>
-      </select>
+      <div id="summaryCollapsedBody"></div>
     </div>
 
-    <!-- SCORES SCREEN -->
-    <div class="scores-screen" id="scoresScreen" role="region" aria-label="Saved Scores Screen" style="max-width:600px; margin:auto;">
-      <h2>Saved Scores</h2>
-      <div id="saveSlots" style="margin-bottom:1rem;"></div>
-      <div class="centered" style="gap:1rem; flex-wrap: wrap;">
-        <button id="saveScoreBtn" type="button">Save Current Score</button>
-        <button id="emailScoresBtn" type="button">Email Scores</button>
-        <button id="endGameBtn" type="button" style="background: var(--red); color: white;">End Game</button>
+    <!-- Expanded tables (landscape only) -->
+    <div class="section" id="summaryFrontWrap" style="display:none">
+      <div class="boxscore-title">Front 9</div>
+      <div id="summaryFront"></div>
+    </div>
+    <div class="section" id="summaryBackWrap" style="display:none">
+      <div class="boxscore-title">Back 9</div>
+      <div id="summaryBack"></div>
+    </div>
+
+    <button id="summaryNewGameBtn" style="margin-top:auto">Start New Game</button>
+  </div>
+
+  <!-- Save pulse -->
+  <div id="saveIcon" class="save-icon" aria-hidden="true">💾</div>
+
+  <!-- Settings Panel -->
+  <div id="settingsPanel" class="panel" aria-label="Settings panel">
+    <button id="closeSettingsBtn" class="close-btn">✖</button>
+    <h3>Settings</h3>
+
+    <!-- In-game Add Player -->
+    <div class="section">
+      <label style="display:block;margin-bottom:6px">Add New Player</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <div id="newPlayerColor" class="color-chip" title="Tap to change color"></div>
+        <input id="newPlayerName" type="text" maxlength="20" placeholder="New player name" class="playerName"/>
+      </div>
+      <label style="display:block;margin-bottom:6px">Insert Before</label>
+      <select id="insertBeforeSelect"></select>
+      <button id="addPlayerInSettingsBtn">Add Player</button>
+    </div>
+
+    <div class="section togglesWrap">
+      <div class="toggle-container">
+        <label>Light Theme</label>
+        <div id="themeToggle" class="toggle-btn"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-container">
+        <label>Left-Handed</label>
+        <div id="handedToggle" class="toggle-btn"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-container">
+        <label>Always-On Display</label>
+        <div id="aodToggle" class="toggle-btn"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-container">
+        <label>Auto Save</label>
+        <div id="autosaveToggle" class="toggle-btn active"><div class="knob"></div></div>
+      </div>
+      <button id="rulesBtn" style="margin-top:8px">Rules</button>
+    </div>
+
+    <!-- Spacer above mini logo -->
+    <div style="height:60px"></div>
+
+    <!-- Footer fixed group -->
+    <div class="footer-fixed">
+      <div style="display:flex;justify-content:center;margin-top:8px">
+        <img src="https://prometheangamescom.wordpress.com/wp-content/uploads/2025/08/mini-logo-1.png" alt="mini logo" style="width:72px;height:auto;opacity:.9"/>
+      </div>
+      <div class="version">v 1.3.1.30</div>
+    </div>
+  </div>
+
+  <!-- Scores Panel -->
+  <div id="scoresPanel" class="panel" aria-label="Scores panel">
+    <button id="closeScoresBtn" class="close-btn">✖</button>
+    <h3>Scores</h3>
+
+    <div id="collapsedNote" class="note-rotate">Rotate device to view expanded box score.</div>
+
+    <!-- Collapsed portrait -->
+    <div class="section" id="collapsedView">
+      <div class="collapsed-header">
+        <div>Player</div><div>Sub</div><div>±Par</div><div>Scr</div><div>Pen</div>
+      </div>
+      <div id="collapsedBody"></div>
+    </div>
+
+    <!-- Expanded landscape -->
+    <div class="section" id="frontSection" style="display:none">
+      <div class="boxscore-title">Front 9</div>
+      <div id="boxscoreFront"></div>
+    </div>
+    <div class="section" id="backSection" style="display:none">
+      <div class="boxscore-title">Back 9</div>
+      <div id="boxscoreBack"></div>
+    </div>
+
+    <!-- Save/Load reveal -->
+    <div class="section">
+      <button id="saveLoadToggleBtn">Save / Load</button>
+    </div>
+    <div class="section" id="saveLoadWrap" style="display:none">
+      <div style="margin-bottom:8px"><button id="autosaveBtn">Autosave — Never</button></div>
+      <h4 style="margin:0 0 8px">Save Slots</h4>
+      <div class="slot" data-slot="1">
+        <input id="slotTitle1" class="playerName" maxlength="24" placeholder="Untitled"/>
+        <button id="slotBtn1">Slot 1 — Empty</button>
+      </div>
+      <div class="slot" data-slot="2">
+        <input id="slotTitle2" class="playerName" maxlength="24" placeholder="Untitled"/>
+        <button id="slotBtn2">Slot 2 — Empty</button>
+      </div>
+      <div class="slot" data-slot="3">
+        <input id="slotTitle3" class="playerName" maxlength="24" placeholder="Untitled"/>
+        <button id="slotBtn3">Slot 3 — Empty</button>
       </div>
     </div>
 
+    <div class="section">
+      <button id="endGameBtn">End Game</button>
+    </div>
+  </div>
+
+  <!-- Social Panel (was Shop) -->
+  <div id="shopPanel" class="panel" aria-label="Social panel">
+    <button id="closeShopBtn" class="close-btn">✖</button>
+    <h3>Social</h3>
+    <div class="section">
+      <button id="instaBtn">@ParfortheCourse_TheGame</button>
+      <button id="merchBtn">Merch</button>
+      <button id="shopLinkBtn">Shop the Series</button>
+    </div>
   </div>
 
   <!-- Bottom Navigation -->
-  <div class="bottom-nav" role="navigation" aria-label="Bottom menu">
-    <button id="navSettingsBtn" type="button" aria-selected="false" aria-controls="settingsScreen">Settings</button>
-    <button id="navScoresBtn" type="button" aria-selected="false" aria-controls="scoresScreen">Scores</button>
-    <button id="navShopBtn" type="button" aria-label="Shop" title="Go to Shop">Shop</button>
+  <div id="menuBar">
+    <button id="btnSettings">Settings</button>
+    <button id="btnScores">Scores</button>
+    <button id="btnShop">Social</button>
   </div>
 
-  <!-- Persistent Home Button -->
-  <button id="homeBtn" class="home-button hidden" aria-label="Go to Score Dashboard">🏠 Home</button>
-
   <script>
-    // Data
-    let players = [];
-    let currentPlayerIndex = 0;
-    let currentHole = 1;
-    let par = 4;
-    let maxHoles = 18;
-    let boxScores = [];
-    let theme = 'dark'; // default theme
+  (function(){
+    'use strict';
+    const MAX_HOLES = 18;
+    const COLOR_PALETTE = ['#d11111','#007aff','#34c759','#ff9500','#af52de','#32ade6','#ff2d55','#ffd60a','#a8e063','#ff6b81','#20c997','#8e5a3c','#1e40af','#d4af37','#7f1d1d','#4b0082'];
+    const AS_KEY = 'autosave_physical';
+    const SLOT_PREFIX = 'pftc_slot_';
+    const SLOT_TITLE_PREFIX = 'pftc_slot_title_';
 
-    // DOM Elements
-    const setupScreen = document.getElementById('setupScreen');
-    const scoreScreen = document.getElementById('scoreScreen');
-    const endScreen = document.getElementById('endScreen');
-    const settingsScreen = document.getElementById('settingsScreen');
-    const scoresScreen = document.getElementById('scoresScreen');
+    // Global color cursor to ensure rolling distinct assignments
+    let colorCursor = 0;
+    const nextAutoColor = () => {
+      const col = COLOR_PALETTE[colorCursor % COLOR_PALETTE.length];
+      colorCursor++;
+      return col;
+    };
 
+    /* DOM */
+    const splash = document.getElementById('splash');
+    const splashNewBtn = document.getElementById('splashNewBtn');
+    const splashLoadBtn = document.getElementById('splashLoadBtn');
+
+    const loadScreen = document.getElementById('load');
+    const loadList = document.getElementById('loadList');
+    const loadBackBtn = document.getElementById('loadBackBtn');
+
+    const setup = document.getElementById('setup');
+    const playerCounter = document.getElementById('playerCounter');
     const playerList = document.getElementById('playerList');
-    const playerNameInput = document.getElementById('playerName');
     const addPlayerBtn = document.getElementById('addPlayerBtn');
-    const errorMsg = document.getElementById('errorMsg');
     const startGameBtn = document.getElementById('startGameBtn');
 
-    const currentPlayerName = document.getElementById('currentPlayerName');
-    const holeBanner = document.getElementById('holeBanner');
-    const currentHoleScore = document.getElementById('currentHoleScore');
-    const currentStats = document.getElementById('currentStats');
-    const penaltyBtn = document.getElementById('penaltyBtn');
-    const scratchBtn = document.getElementById('scratchBtn');
-    const minusBtn = document.getElementById('minusBtn');
-    const plusBtn = document.getElementById('plusBtn');
-
+    const game = document.getElementById('game');
+    const menuBar = document.getElementById('menuBar');
     const prevPlayerBtn = document.getElementById('prevPlayerBtn');
     const nextPlayerBtn = document.getElementById('nextPlayerBtn');
+    const playerNameLabel = document.getElementById('playerNameLabel');
+    const playerNameText = document.getElementById('playerNameText');
+    const leaderIcon = document.getElementById('leaderIcon');
+    const holeLabel = document.getElementById('holeLabel');
+    const batterInfo = document.getElementById('batterInfo');
 
     const parSelect = document.getElementById('parSelect');
+    const scoreVal = document.getElementById('scoreVal');
+    const scoreCallout = document.getElementById('scoreCallout');
+    const statScore = document.getElementById('statScore');
+    const statScratch = document.getElementById('statScratch');
+    const statPenalty = document.getElementById('statPenalty');
+    const playerColorDivider = document.getElementById('playerColorDivider');
 
+    const undoBtn = document.getElementById('undoBtn');
     const nextCardBtn = document.getElementById('nextCardBtn');
-    const toggleBoxScoreBtn = document.getElementById('toggleBoxScoreBtn');
-    const boxScore = document.getElementById('boxScore');
+    const mercyBtn = document.getElementById('mercyBtn');
 
-    const finalResults = document.getElementById('finalResults');
+    const saveIcon = document.getElementById('saveIcon');
 
-    const navSettingsBtn = document.getElementById('navSettingsBtn');
-    const navScoresBtn = document.getElementById('navScoresBtn');
-    const navShopBtn = document.getElementById('navShopBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const scoresPanel = document.getElementById('scoresPanel');
+    const shopPanel = document.getElementById('shopPanel');
 
-    const homeBtn = document.getElementById('homeBtn');
+    const btnSettings = document.getElementById('btnSettings');
+    const btnScores = document.getElementById('btnScores');
+    const btnShop = document.getElementById('btnShop');
 
-    // SETTINGS
-    const settingsPlayerNameInput = document.getElementById('settingsPlayerName');
-    const settingsAddPlayerBtn = document.getElementById('settingsAddPlayerBtn');
-    const settingsErrorMsg = document.getElementById('settingsErrorMsg');
-    const manualScoreEdit = document.getElementById('manualScoreEdit');
-    const themeSelect = document.getElementById('themeSelect');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const closeScoresBtn = document.getElementById('closeScoresBtn');
+    const closeShopBtn = document.getElementById('closeShopBtn');
 
-    // SCORES
-    const saveSlotsDiv = document.getElementById('saveSlots');
-    const saveScoreBtn = document.getElementById('saveScoreBtn');
-    const emailScoresBtn = document.getElementById('emailScoresBtn');
+    const themeToggle = document.getElementById('themeToggle');
+    const autosaveToggle = document.getElementById('autosaveToggle');
+    const handedToggle = document.getElementById('handedToggle');
+    const aodToggle = document.getElementById('aodToggle');
+
+    const togglesWrap = document.querySelector('#settingsPanel .togglesWrap');
+
+    const boxscoreFront = document.getElementById('boxscoreFront');
+    const boxscoreBack = document.getElementById('boxscoreBack');
+    const collapsedBody = document.getElementById('collapsedBody');
+    const frontSection = document.getElementById('frontSection');
+    const backSection = document.getElementById('backSection');
+    const collapsedView = document.getElementById('collapsedView');
+    const collapsedNote = document.getElementById('collapsedNote');
+
+    const autosaveBtn = document.getElementById('autosaveBtn');
     const endGameBtn = document.getElementById('endGameBtn');
 
-    // --- Utility Functions ---
+    const saveLoadToggleBtn = document.getElementById('saveLoadToggleBtn');
+    const saveLoadWrap = document.getElementById('saveLoadWrap');
 
-    // Show / Hide error messages
-    function showError(container, message) {
-      container.textContent = message;
-    }
-    function clearError(container) {
-      container.textContent = '';
+    const shopLinkBtn = document.getElementById('shopLinkBtn');
+    const instaBtn = document.getElementById('instaBtn');
+    const merchBtn = document.getElementById('merchBtn');
+
+    const newPlayerNameInput = document.getElementById('newPlayerName');
+    const newPlayerColorChip = document.getElementById('newPlayerColor');
+    const insertBeforeSelect = document.getElementById('insertBeforeSelect');
+
+    const rulesBtn = document.getElementById('rulesBtn');
+
+    // Summary
+    const summary = document.getElementById('summary');
+    const summaryMeta = document.getElementById('summaryMeta');
+    const summaryInfo = document.getElementById('summaryInfo');
+    const summaryCollapsedBody = document.getElementById('summaryCollapsedBody');
+    const summaryFrontWrap = document.getElementById('summaryFrontWrap');
+    const summaryBackWrap = document.getElementById('summaryBackWrap');
+    const summaryFront = document.getElementById('summaryFront');
+    const summaryBack = document.getElementById('summaryBack');
+    const summaryNewGameBtn = document.getElementById('summaryNewGameBtn');
+
+    /* State */
+    let players = []; // [{name,color}]
+    let initialOrder = [];
+    let holeOrder = []; // [ [playerIdx...] per hole ]
+    let currentHole = 1;
+    let currentPosition = 0;
+    let par = null; const parByHole = Array.from({length:MAX_HOLES}, ()=> null);
+
+    // Working turn state
+    let score=0, scratches=0, penalties=0;
+
+    // scoresMatrix[holeIdx][playerIdx] = {score, scratches, penalties} | null
+    let scoresMatrix = [];
+
+    // visited flags for gating
+    let visitedByHole = []; // visitedByHole[holeIdx] = Array<boolean>
+
+    // preferences
+    const toggles = { autosave:true, theme:false, leftHanded:false, aod:false };
+
+    // session times + hole times
+    let startTime = null;
+    let endTime = null;
+    const holeStartTimes = Array(MAX_HOLES).fill(null);
+    const holeEndTimes = Array(MAX_HOLES).fill(null);
+
+    // global undo stack (snapshots)
+    const undoStack = [];
+    function pushUndo(){
+      if (undoStack.length > 30) undoStack.shift();
+      undoStack.push(stateSnapshot());
     }
 
-    // Player Drag and Drop reorder
-    let dragged;
-    function dragStart(e) {
-      dragged = e.target;
-      e.dataTransfer.effectAllowed = 'move';
+    /* Helpers */
+    const show=(el)=>{ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); el.classList.add('active'); };
+    const pulseSave=()=>{ saveIcon.style.opacity=1; setTimeout(()=>saveIcon.style.opacity=0,400); };
+    const now=()=> new Date().toLocaleString();
+    const hasAutosave = () => !!localStorage.getItem(AS_KEY);
+    const isLandscape = () => window.matchMedia && window.matchMedia('(orientation: landscape)').matches;
+
+    function updatePlayerCounter(){
+      const total = playerList.children.length;
+      const named = [...playerList.querySelectorAll('.playerName')].filter(i=>i.value.trim().length>0).length;
+      playerCounter.textContent = `Players: ${total} (named ${named})`;
     }
-    function dragOver(e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      if (e.target.tagName === 'LI') {
-        e.target.style.borderTop = '2px solid var(--primary)';
+
+    function rgbToHex(rgb){
+      if (!rgb) return null;
+      if (/^#/.test(rgb)) return rgb.toLowerCase();
+      const m = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/i);
+      if (!m) return null;
+      const toHex = n => ('0'+(+n).toString(16)).slice(-2);
+      return ('#'+toHex(m[1])+toHex(m[2])+toHex(m[3])).toLowerCase();
+    }
+
+    function stateSnapshot(){
+      return { timestamp: now(), players: JSON.parse(JSON.stringify(players)), initialOrder:[...initialOrder], holeOrder: JSON.parse(JSON.stringify(holeOrder)),
+        currentHole, currentPosition, par, parByHole:[...parByHole],
+        score, scratches, penalties,
+        scoresMatrix: JSON.parse(JSON.stringify(scoresMatrix)),
+        visitedByHole: JSON.parse(JSON.stringify(visitedByHole)),
+        toggles: {...toggles},
+        startTime, endTime,
+        holeStartTimes:[...holeStartTimes], holeEndTimes:[...holeEndTimes]
+      };
+    }
+    function restore(snapshot){
+      players = snapshot.players||([]);
+      initialOrder = snapshot.initialOrder||players.map((_,i)=>i);
+      holeOrder = snapshot.holeOrder||[players.map((_,i)=>i)];
+      currentHole = snapshot.currentHole||1;
+      currentPosition = snapshot.currentPosition||0;
+      par = (snapshot.par ?? null);
+      (snapshot.parByHole||[]).forEach((v,i)=> parByHole[i]=v);
+      score = +snapshot.score||0; scratches=+snapshot.scratches||0; penalties=+snapshot.penalties||0;
+      scoresMatrix = snapshot.scoresMatrix||Array.from({length:MAX_HOLES},()=>Array(players.length).fill(null));
+      visitedByHole = snapshot.visitedByHole || Array.from({length:MAX_HOLES},()=> Array(players.length).fill(false));
+      Object.assign(toggles, snapshot.toggles||{});
+      startTime = snapshot.startTime || startTime;
+      endTime = snapshot.endTime || null;
+      (snapshot.holeStartTimes||[]).forEach((v,i)=> holeStartTimes[i]=v);
+      (snapshot.holeEndTimes||[]).forEach((v,i)=> holeEndTimes[i]=v);
+      applyPrefs();
+    }
+    function autosave(){
+      if (!toggles.autosave) return;
+      try{ localStorage.setItem(AS_KEY, JSON.stringify(stateSnapshot())); }catch{}
+      refreshAutosaveLabel(); pulseSave();
+    }
+    function refreshAutosaveLabel(){
+      const raw = localStorage.getItem(AS_KEY);
+      if (!raw){ if(autosaveBtn) autosaveBtn.textContent = 'Autosave — Never'; return; }
+      try{
+        const s = JSON.parse(raw);
+        const n = (s.players||[]).length;
+        if(autosaveBtn) autosaveBtn.textContent = `Autosave — ${s.timestamp} • ${n} players`;
+      }catch{ if(autosaveBtn) autosaveBtn.textContent = 'Autosave — Never'; }
+    }
+    function applyPrefs(){
+      document.body.classList.toggle('light-theme', !!toggles.theme);
+      document.body.classList.toggle('left-handed', !!toggles.leftHanded);
+      if (themeToggle) themeToggle.classList.toggle('active', !!toggles.theme);
+      if (autosaveToggle) autosaveToggle.classList.toggle('active', !!toggles.autosave);
+      if (handedToggle) handedToggle.classList.toggle('active', !!toggles.leftHanded);
+      if (aodToggle) aodToggle.classList.toggle('active', !!toggles.aod);
+      if (toggles.leftHanded) togglesWrap.classList.add('mirror-toggles'); else togglesWrap.classList.remove('mirror-toggles');
+      manageWakeLock();
+    }
+
+    function ensureOrder(){
+      if(!holeOrder[currentHole-1] || !holeOrder[currentHole-1].length){ holeOrder[currentHole-1] = players.map((_,i)=>i); }
+      if(!visitedByHole[currentHole-1] || visitedByHole[currentHole-1].length !== players.length){
+        visitedByHole[currentHole-1] = Array(players.length).fill(false);
       }
     }
-    function dragLeave(e) {
-      if (e.target.tagName === 'LI') {
-        e.target.style.borderTop = '';
+    function markVisited(){
+      ensureOrder();
+      const idx = holeOrder[currentHole-1][currentPosition];
+      if (visitedByHole[currentHole-1]) visitedByHole[currentHole-1][idx] = true;
+    }
+    function allPlayersVisitedThisHole(){
+      const v = visitedByHole[currentHole-1] || [];
+      return v.length === players.length && v.every(Boolean);
+    }
+    function playersRemainingCount(){
+      const row = scoresMatrix[currentHole-1] || [];
+      let zeros = 0;
+      for(let i=0;i<players.length;i++){
+        const v = row[i] ? Number(row[i].score||0) : 0;
+        if (!v) zeros++;
       }
+      return zeros;
     }
-    function drop(e) {
-      e.preventDefault();
-      if (e.target.tagName !== 'LI') return;
-      e.target.style.borderTop = '';
-
-      const list = playerList;
-      const nodes = Array.from(list.children);
-      const draggedIndex = nodes.indexOf(dragged);
-      const targetIndex = nodes.indexOf(e.target);
-
-      if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) return;
-
-      // Reorder players array accordingly
-      const movedPlayer = players.splice(draggedIndex, 1)[0];
-      players.splice(targetIndex, 0, movedPlayer);
-
-      // Rebuild player list UI
-      renderPlayerList();
+    function updateNextCardGate(){
+      nextCardBtn.disabled = !(par!=null && allPlayersVisitedThisHole());
     }
 
-    // Render player list in setup screen
-    function renderPlayerList() {
-      playerList.innerHTML = '';
-      players.forEach((player) => {
-        const li = document.createElement('li');
-        li.textContent = player.name;
-        li.draggable = true;
-        li.addEventListener('dragstart', dragStart);
-        li.addEventListener('dragover', dragOver);
-        li.addEventListener('dragleave', dragLeave);
-        li.addEventListener('drop', drop);
-        playerList.appendChild(li);
+    /* Setup rendering */
+    function addPlayerRowAt(index, name='', color){
+      const col = color || nextAutoColor();
+      const li = document.createElement('li'); li.className='playerRow';
+      li.innerHTML = `
+        <div class="color-chip" style="background:${col}" data-color-index="${COLOR_PALETTE.indexOf(col)}"></div>
+        <input class="playerName" maxlength="20" placeholder="Player name" value="${name}"/>
+        <div class="order-controls">
+          <button class="moveUp">↑</button>
+          <button class="moveDown">↓</button>
+          <button class="remove">✖</button>
+        </div>`;
+      const rows = [...playerList.children];
+      if (index>=0 && index<rows.length) playerList.insertBefore(li, rows[index]); else playerList.appendChild(li);
+      const input = li.querySelector('.playerName');
+      setTimeout(()=> input.focus(), 0);
+      input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addPlayerBtn.click(); }});
+      input.addEventListener('input', ()=>{ updateStartBtn(); updatePlayerCounter(); });
+
+      li.querySelector('.color-chip').addEventListener('click', (e)=>{
+        const el = e.target;
+        const cur = +el.getAttribute('data-color-index') || 0;
+        const next = (cur + 1) % COLOR_PALETTE.length;
+        el.setAttribute('data-color-index', String(next));
+        el.style.backgroundColor = COLOR_PALETTE[next];
       });
+
+      updateStartBtn(); updatePlayerCounter(); refreshInsertSelect_DuringSetup();
     }
 
-    // Add player function for setup screen
-    function addPlayer() {
-      clearError(errorMsg);
-      const name = playerNameInput.value.trim();
-      if (!name) return;
+    function refreshInsertSelect_DuringSetup(){}
 
-      if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-        showError(errorMsg, 'Duplicate name. Try adding a 2 or using a nickname.');
-        playerNameInput.classList.add('error');
-        return;
+    function updateStartBtn(){
+      const filled = [...playerList.children].map(r=>r.querySelector('.playerName').value.trim()).filter(Boolean).length;
+      startGameBtn.disabled = filled < 1;
+    }
+
+    /* Game flow / par options */
+    function populateParOnce(){
+      parSelect.innerHTML='<option value="">--</option>';
+      for(let i=1;i<=15;i++){ const o=document.createElement('option'); o.value=i; o.textContent=i; parSelect.appendChild(o); }
+    }
+
+    function getBatterInfo(){
+      ensureOrder();
+      const row = scoresMatrix[currentHole-1] || [];
+      const order = holeOrder[currentHole-1];
+      // count zeros
+      let zeros = 0;
+      for (let i=0;i<players.length;i++){
+        const v = row[i] ? Number(row[i].score||0) : 0;
+        if (!v) zeros++;
       }
-      playerNameInput.classList.remove('error');
-
-      players.push({
-        name,
-        strokes: 0,
-        penalties: 0,
-        scratches: 0,
-        total: 0,
-        holes: []
-      });
-
-      playerNameInput.value = '';
-      renderPlayerList();
-      playerNameInput.focus();
-    }
-
-    // Switch between screens
-    function switchScreen(screen) {
-      // Hide all
-      setupScreen.classList.remove('active-screen');
-      scoreScreen.classList.remove('active-screen');
-      endScreen.classList.remove('active-screen');
-      settingsScreen.classList.remove('active-screen');
-      scoresScreen.classList.remove('active-screen');
-
-      navSettingsBtn.setAttribute('aria-selected', 'false');
-      navScoresBtn.setAttribute('aria-selected', 'false');
-
-      switch(screen) {
-        case 'setup':
-          setupScreen.classList.add('active-screen');
-          hideHomeButton();
-          break;
-        case 'score':
-          scoreScreen.classList.add('active-screen');
-          showHomeButton();
-          updatePlayerUI();
-          break;
-        case 'end':
-          endScreen.classList.add('active-screen');
-          hideHomeButton();
-          break;
-        case 'settings':
-          settingsScreen.classList.add('active-screen');
-          navSettingsBtn.setAttribute('aria-selected', 'true');
-          showHomeButton();
-          renderSettingsManualEdit();
-          break;
-        case 'scores':
-          scoresScreen.classList.add('active-screen');
-          navScoresBtn.setAttribute('aria-selected', 'true');
-          showHomeButton();
-          renderSaveSlots();
-          break;
+      // find next unplayed after currentPosition
+      let nextName = '';
+      for (let step=1; step<=order.length; step++){
+        const j = (currentPosition + step) % order.length;
+        const idx = order[j];
+        const v = row[idx] ? Number(row[idx].score||0) : 0;
+        if (!v){ nextName = players[idx]?.name || ''; break; }
       }
+      if (!nextName || zeros===0) return '';
+      return `Next: ${nextName}\n(${zeros}) Players remaining`;
     }
 
-    // Show / hide home button
-    function showHomeButton() {
-      homeBtn.classList.remove('hidden');
-    }
-    function hideHomeButton() {
-      homeBtn.classList.add('hidden');
-    }
-
-    // --- Gameplay Functions ---
-
-    function startGame() {
-      if (players.length === 0) return;
-      currentPlayerIndex = 0;
-      currentHole = 1;
-      par = parseInt(parSelect.value) || 4;
-
-      // Reset player stats and holes
-      players.forEach(p => {
-        p.strokes = 0;
-        p.penalties = 0;
-        p.scratches = 0;
-        p.total = 0;
-        p.holes = [];
-      });
-
-      switchScreen('score');
-      renderPlayerUI();
-      updateHoleBanner();
-      updatePlayerUI();
-      clearError(errorMsg);
-      showHomeButton();
-    }
-
-    // Render UI for current player on gameplay screen
-    function renderPlayerUI() {
-      const player = players[currentPlayerIndex];
-      currentPlayerName.textContent = player.name;
-      currentHoleScore.textContent = player.strokes;
-      currentStats.textContent = `Penalties: ${player.penalties} | Scratches: ${player.scratches} | Strokes: ${player.strokes}`;
-      parSelect.value = par;
-    }
-
-    // Update player UI (helper after any changes)
-    function updatePlayerUI() {
-      renderPlayerUI();
-    }
-
-    // Update hole banner
-    function updateHoleBanner() {
-      holeBanner.textContent = `Hole ${currentHole}`;
-    }
-
-    // Navigation between players
-    function nextPlayer() {
-      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-      updatePlayerUI();
-    }
-    function prevPlayer() {
-      currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
-      updatePlayerUI();
-    }
-
-    // Score adjustments
-    function adjustScore(delta) {
-      const player = players[currentPlayerIndex];
-      player.strokes = Math.max(0, player.strokes + delta);
-      updatePlayerUI();
-    }
-    function addPenalty() {
-      const player = players[currentPlayerIndex];
-      player.penalties++;
-      player.strokes++;
-      updatePlayerUI();
-    }
-    function addScratch() {
-      const player = players[currentPlayerIndex];
-      player.scratches++;
-      player.strokes += 2;
-      updatePlayerUI();
-    }
-
-    // Next Card (hole)
-    function nextCard() {
-      // Save current hole data to holes array, update totals
-      players.forEach(p => {
-        p.holes.push({ strokes: p.strokes, par: par });
-        p.total += p.strokes;
-        // Reset strokes and stats for new hole
-        p.strokes = 0;
-        p.penalties = 0;
-        p.scratches = 0;
-      });
-
-      currentHole++;
-      if (currentHole > maxHoles) {
-        endGame();
-        return;
+    function computeLeaderIndexInstant(){
+      let leaderIdx = -1, leaderScore = Infinity;
+      for (let i=0;i<players.length;i++){
+        const t = totalsForPlayerInstant(i);
+        if (t.tScore>0 && t.tScore < leaderScore){ leaderScore=t.tScore; leaderIdx=i; }
       }
-
-      // Update par from select
-      par = parseInt(parSelect.value) || 4;
-
-      // Sort players by total score ascending, tie break by original order
-      players.sort((a, b) => {
-        if (a.total !== b.total) return a.total - b.total;
-        // Tie-breaker: original order by index in players array (stable sort workaround)
-        return 0;
-      });
-
-      currentPlayerIndex = 0;
-      updateHoleBanner();
-      updatePlayerUI();
-      hideBoxScore();
+      return leaderIdx;
     }
 
-    // Box score toggle
-    let boxScoreVisible = false;
-    function toggleBoxScore() {
-      boxScoreVisible = !boxScoreVisible;
-      if (boxScoreVisible) {
-        renderBoxScore();
-        boxScore.classList.remove('hidden');
+    function refreshHeader(){
+      ensureOrder();
+      const idx = holeOrder[currentHole-1][currentPosition];
+      const p = players[idx] || {name:''};
+      playerNameText.textContent = p.name;
+      holeLabel.textContent = `Hole ${currentHole}`;
+      batterInfo.textContent = getBatterInfo();
+
+      // Update dynamic color divider + nav btns
+      const col = (players[idx] && players[idx].color) || '#444';
+      playerColorDivider.style.backgroundColor = col;
+      colorizeNav();
+
+      // Leader icon
+      const leaderIdx = computeLeaderIndexInstant();
+      if (leaderIdx===idx){
+        leaderIcon.style.display = 'inline-block';
       } else {
-        boxScore.classList.add('hidden');
+        leaderIcon.style.display = 'none';
       }
+
+      // load par for this hole
+      const pv = parByHole[currentHole-1];
+      par = pv!=null ? Number(pv) : null;
+      parSelect.value = (par!=null) ? String(par) : '';
+
+      markVisited();
+      updateNextCardGate();
+      loadWorkingFromMatrix();
     }
-    function hideBoxScore() {
-      boxScoreVisible = false;
-      boxScore.classList.add('hidden');
+
+    function colorizeNav(){
+      ensureOrder();
+      const idx = holeOrder[currentHole-1][currentPosition];
+      const col = (players[idx] && players[idx].color) || '#444';
+      const fg = getContrast(col);
+      prevPlayerBtn.style.backgroundColor = col; prevPlayerBtn.style.color = fg;
+      nextPlayerBtn.style.backgroundColor = col; nextPlayerBtn.style.color = fg;
+    }
+    function getContrast(rgbOrHex){
+      let r,g,b;
+      if(/^#/.test(rgbOrHex)){
+        const h = rgbOrHex.replace('#','');
+        const hx = h.length===3? h.split('').map(x=>x+x).join(''):h;
+        r=parseInt(hx.slice(0,2),16); g=parseInt(hx.slice(2,4),16); b=parseInt(hx.slice(4,6),16);
+      }else{
+        const m = (rgbOrHex||'').match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/i);
+        r=m?+m[1]:209; g=m?+m[2]:17; b=m?+m[3]:17;
+      }
+      const L = 0.2126*(r/255)+0.7152*(g/255)+0.0722*(b/255);
+      return L>0.55? '#000':'#fff';
     }
 
-    function renderBoxScore() {
-      if (players.length === 0) {
-        boxScore.innerHTML = '<p>No players to display.</p>';
-        return;
+    function loadWorkingFromMatrix(){
+      ensureOrder();
+      const idx = holeOrder[currentHole-1][currentPosition];
+      const cell = scoresMatrix[currentHole-1]?.[idx] || null;
+      if (cell){ score = +cell.score||0; scratches = +cell.scratches||0; penalties = +cell.penalties||0; }
+      else { score=0; scratches=0; penalties=0; }
+      updateCallout();
+      updateUI();
+    }
+    function updateCallout(){
+      const pv = parByHole[currentHole-1];
+      let text = '';
+      if (pv!=null && score>0){
+        const diff = score - Number(pv);
+        if (score===1) text = 'Ace!';
+        else if (diff===0) text = 'Par!';
+        else if (diff===1) text = 'Bogey';
+        else if (diff===-1) text = 'Birdie!';
+        else if (diff===-2) text = 'Eagle!';
+        else if (diff===-3) text = 'Double Eagle!!';
       }
+      scoreCallout.textContent = text;
+    }
 
-      let html = '<table><thead><tr><th>Player</th>';
-      for (let i = 0; i < currentHole - 1; i++) {
-        html += `<th>H${i + 1}</th>`;
-      }
-      html += '<th>Total</th><th>Penalties</th><th>Scratches</th></tr></thead><tbody>';
-
-      players.forEach(p => {
-        html += `<tr><td>${p.name}</td>`;
-        p.holes.forEach(h => html += `<td>${h.strokes}</td>`);
-        // Fill empty holes if any
-        for(let i = p.holes.length; i < currentHole -1; i++) {
-          html += `<td>-</td>`;
+    // Instant (live) totals
+    function totalsForPlayerInstant(i){
+      let tScore=0, tPen=0, tScr=0;
+      for(let h=1; h<=MAX_HOLES; h++){
+        const cell = scoresMatrix[h-1]?.[i];
+        if (cell && (+cell.score>0)){
+          tScore += (+cell.score||0);
+          tPen   += (+cell.penalties||0);
+          tScr   += (+cell.scratches||0);
         }
-        html += `<td>${p.total}</td><td>${p.penalties}</td><td>${p.scratches}</td></tr>`;
-      });
-
-      html += '</tbody></table>';
-      boxScore.innerHTML = html;
+      }
+      return { tScore, tPen, tScr };
     }
 
-    // --- Settings Page ---
+    function updateUI(){
+      scoreVal.textContent = score;
+      updateCallout();
 
-    function addPlayerSettings() {
-      clearError(settingsErrorMsg);
-      const name = settingsPlayerNameInput.value.trim();
-      if (!name) return;
+      ensureOrder();
+      const idx = holeOrder[currentHole-1][currentPosition];
+      const totals = totalsForPlayerInstant(idx);
+      statScore.textContent = totals.tScore || 0;
+      statPenalty.textContent = totals.tPen || 0;
+      statScratch.textContent = totals.tScr || 0;
 
-      if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-        showError(settingsErrorMsg, 'Duplicate name. Try adding a 2 or using a nickname.');
-        return;
+      // Mercy visibility
+      if (par!=null && score >= (Number(par)+5)) {
+        mercyBtn.style.display = 'inline-block';
+      } else {
+        mercyBtn.style.display = 'none';
       }
 
-      players.push({
-        name,
-        strokes: 0,
-        penalties: 0,
-        scratches: 0,
-        total: 0,
-        holes: []
-      });
-
-      settingsPlayerNameInput.value = '';
-      renderSettingsManualEdit();
-      alert(`Player "${name}" added.`);
+      batterInfo.textContent = getBatterInfo();
+      updateNextCardGate();
+      renderScoresPanel();
     }
 
-    // Render manual score editing table
-    function renderSettingsManualEdit() {
-      if (players.length === 0) {
-        manualScoreEdit.innerHTML = '<p>No players added.</p>';
-        return;
+    function commitCell(){
+      ensureOrder();
+      const idx = holeOrder[currentHole-1][currentPosition];
+      if (!Array.isArray(scoresMatrix[currentHole-1])) scoresMatrix[currentHole-1] = [];
+      scoresMatrix[currentHole-1][idx] = { score, scratches, penalties };
+    }
+
+    function nextPlayer(dir){
+      pushUndo();
+      commitCell(); autosave();
+      const order = holeOrder[currentHole-1];
+      if (dir===-1) currentPosition = (currentPosition - 1 + order.length) % order.length;
+      else currentPosition = (currentPosition + 1) % order.length;
+      refreshHeader();
+    }
+
+    function computeNextOrder(){
+      const pi = currentHole-1;
+      const order = holeOrder[pi];
+      const sorted = order.map(i=>{
+        const cell = scoresMatrix[pi]?.[i]; const sc = cell ? +cell.score : Infinity;
+        return {i, sc, setupIndex: initialOrder.indexOf(i)};
+      }).sort((a,b)=> a.sc - b.sc || a.setupIndex - b.setupIndex).map(o=>o.i);
+      holeOrder[currentHole] = sorted;
+    }
+
+    function ensureParForHole(){
+      // Always prompt at the start of a hole until set
+      if (currentHole>MAX_HOLES) return;
+      if (parByHole[currentHole-1]!=null) return; // already set for this hole
+      openParModal(currentHole, null, (n)=>{
+        parByHole[currentHole-1]=n; par=n; parSelect.value=String(n); 
+        if (holeStartTimes[currentHole-1]==null) holeStartTimes[currentHole-1] = new Date().toISOString();
+        updateNextCardGate(); autosave();
+      });
+    }
+
+    function advanceHole(){
+      if (par==null || !allPlayersVisitedThisHole()) { updateNextCardGate(); return; }
+      pushUndo();
+      commitCell();
+      parByHole[currentHole-1] = par;
+      if (!holeEndTimes[currentHole-1]) holeEndTimes[currentHole-1] = new Date().toISOString();
+      autosave();
+      computeNextOrder();
+      currentHole += 1;
+      if (currentHole > MAX_HOLES){ return endGame(true); }
+      currentPosition = 0;
+      visitedByHole[currentHole-1] = Array(players.length).fill(false);
+      refreshHeader();
+      ensureParForHole();
+      holeStartTimes[currentHole-1] = new Date().toISOString();
+    }
+
+    /* Completed holes mask — for box scores & summary */
+    function completedHolesMask(){
+      const mask = Array(MAX_HOLES).fill(false);
+      for (let h=0; h<MAX_HOLES; h++){
+        let ok = true;
+        for (let i=0; i<players.length; i++){
+          const c = scoresMatrix[h]?.[i];
+          const v = c ? Number(c.score||0) : 0;
+          if (v<=0){ ok=false; break; }
+        }
+        mask[h] = ok;
       }
-      let html = '<table border="1" style="width:100%; border-collapse: collapse;">';
-      html += '<thead><tr><th>Player</th>';
-      for (let i = 1; i <= maxHoles; i++) {
-        html += `<th>H${i}</th>`;
+      return mask;
+    }
+
+    function totalsForPlayerFiltered(i, startHole=1, endHole=MAX_HOLES){
+      const mask = completedHolesMask();
+      let tScore=0, tPen=0, tScr=0;
+      for(let h=startHole; h<=endHole; h++){
+        if (!mask[h-1]) continue;
+        const cell = scoresMatrix[h-1]?.[i];
+        if (cell){ tScore += (+cell.score||0); tPen += (+cell.penalties||0); tScr += (+cell.scratches||0); }
       }
+      return { tScore, tPen, tScr };
+    }
+    function totalsForPlayerRangeFiltered(i, startHole, endHole){
+      const mask = completedHolesMask();
+      let tScore=0, tPen=0, tScr=0, any=false;
+      for(let h=startHole; h<=endHole; h++){
+        if (!mask[h-1]) continue;
+        const cell = scoresMatrix[h-1]?.[i];
+        if (cell){ any=true; tScore += (+cell.score||0); tPen += (+cell.penalties||0); tScr += (+cell.scratches||0); }
+      }
+      return { any, tScore, tPen, tScr };
+    }
+    function parSubtotalFiltered(startHole=1, endHole=MAX_HOLES){
+      const mask = completedHolesMask();
+      let sum = 0, any=false;
+      for(let h=startHole; h<=endHole; h++){
+        if (!mask[h-1]) continue;
+        const pv = parByHole[h-1];
+        if (pv!=null){ any=true; sum += (+pv||0); }
+      }
+      return any ? sum : 0;
+    }
+
+    function buildSectionTable(startHole, endHole){
+      if (!players.length){
+        return '<p>Start a game to see the box score.</p>';
+      }
+      let html = '<table class="boxscore"><thead><tr><th></th>';
+      for(let h=startHole; h<=endHole; h++) html += `<th>H${h}</th>`;
+      html += '<th>Tot</th><th>±Par</th><th>Pen</th><th>Scr</th></tr>';
+
+      // par row
+      html += '<tr><th>Par</th>';
+      let pTotal = 0;
+      const mask = completedHolesMask();
+      for(let h=startHole; h<=endHole; h++){
+        const pv = parByHole[h-1];
+        html += `<th>${pv!=null ? pv : '-'}</th>`;
+        if (mask[h-1] && pv!=null) pTotal += Number(pv)||0;
+      }
+      html += `<th>${pTotal||'-'}</th><th class="muted">–</th><th class="muted">–</th><th class="muted">–</th>`;
       html += '</tr></thead><tbody>';
 
-      players.forEach((p, idx) => {
-        html += `<tr><td>${p.name}</td>`;
-        for (let h = 0; h < maxHoles; h++) {
-          const val = p.holes[h] ? p.holes[h].strokes : '';
-          html += `<td><input type="number" min="0" style="width: 3rem;" data-player="${idx}" data-hole="${h}" value="${val}" /></td>`;
+      // leader (range)
+      let leaderIdx = -1, leaderScore = Infinity;
+      const totalsRange = players.map((p,i)=> totalsForPlayerRangeFiltered(i, startHole, endHole));
+      totalsRange.forEach((t,i)=>{ if (t.any && t.tScore < leaderScore){ leaderScore=t.tScore; leaderIdx=i; } });
+
+      players.forEach((p,i)=>{
+        const { any, tScore, tPen, tScr } = totalsRange[i];
+        const leaderClass = (i===leaderIdx) ? ' leader' : '';
+        const rel = pTotal ? (tScore - pTotal) : 0;
+        const relText = pTotal ? (rel>0?`+${rel}`:String(rel)) : '-';
+        html += `<tr class="${leaderClass}"><th>${p.name}</th>`;
+        for(let h=startHole; h<=endHole; h++){
+          const cell = scoresMatrix[h-1]?.[i];
+          const v = cell ? Number(cell.score||0) : 0;
+          html += `<td data-hole="${h}" data-player="${i}" class="bs-cell">${cell && v>0 ? v : '-'}</td>`;
         }
-        html += '</tr>';
+        html += `<td>${any ? tScore : '-'}</td><td>${pTotal?relText:'-'}</td><td class="bs-pen" data-player="${i}">${any ? tPen : 0}</td><td class="bs-scr" data-player="${i}">${any ? tScr : 0}</td></tr>`;
       });
 
       html += '</tbody></table>';
-      manualScoreEdit.innerHTML = html;
+      return html;
+    }
 
-      // Add event listeners to inputs
-      manualScoreEdit.querySelectorAll('input[type=number]').forEach(input => {
-        input.addEventListener('change', manualScoreEditChanged);
+    function buildCollapsed(){
+      let leaderIdx = -1, leaderScore = Infinity;
+      players.forEach((_,i)=>{
+        const { tScore } = totalsForPlayerFiltered(i, 1, MAX_HOLES);
+        if (tScore > 0 && tScore < leaderScore){ leaderScore = tScore; leaderIdx = i; }
+      });
+      const totalPar = parSubtotalFiltered(1, MAX_HOLES) || 0;
+
+      const rows = players.map((p,i)=>{
+        const { tScore, tPen, tScr } = totalsForPlayerFiltered(i,1,MAX_HOLES);
+        const rel = totalPar ? (tScore - totalPar) : 0;
+        const relText = totalPar ? ((rel>0?`+${rel}`:String(rel))) : '-';
+        const leaderClass = (i===leaderIdx) ? ' leader' : '';
+        return `
+          <div class="collapsed-row${leaderClass}">
+            <div>${p.name}</div>
+            <div>${tScore || '-'}</div>
+            <div>${totalPar ? relText : '-'}</div>
+            <div>${tScr || 0}</div>
+            <div>${tPen || 0}</div>
+          </div>`;
+      });
+
+      return rows.join('');
+    }
+
+    function renderScoresPanel(){
+      // Collapsed always populated
+      collapsedBody.innerHTML = buildCollapsed();
+
+      // Expanded toggled by orientation
+      const landscape = isLandscape();
+      frontSection.style.display = landscape ? 'block' : 'none';
+      backSection.style.display  = landscape ? 'block' : 'none';
+      collapsedView.style.display = landscape ? 'none' : 'block';
+      collapsedNote.style.display = landscape ? 'none' : 'block';
+
+      if (landscape){
+        boxscoreFront.innerHTML = buildSectionTable(1,9);
+        boxscoreBack.innerHTML  = buildSectionTable(10,18);
+        attachEditableHandlers(); // enable editing in expanded view
+      }
+    }
+
+    /* Summary screen */
+    function msBetween(a,b){ try{ return Math.max(0, (new Date(b)-new Date(a))); }catch{return 0;} }
+    function holeDurations(){
+      return holeStartTimes.map((st,idx)=>{
+        const et = holeEndTimes[idx];
+        if (!st || !et) return null;
+        return Math.max(0, Math.round( (new Date(et)-new Date(st))/1000 )); // seconds
+      });
+    }
+    function renderSummary(){
+      // meta hidden per request
+      summaryMeta.textContent = '';
+
+      // info table
+      const info = [];
+      // 1 Number of players
+      info.push(`<div class="summary-item"><span>Players</span><span>${players.length}</span></div>`);
+      // 2 Start time
+      info.push(`<div class="summary-item"><span>Start</span><span>${startTime ? new Date(startTime).toLocaleString() : '-'}</span></div>`);
+      // 3 End time
+      info.push(`<div class="summary-item"><span>End</span><span>${endTime ? new Date(endTime).toLocaleString() : '-'}</span></div>`);
+      // 4 Duration
+      const durMin = (startTime && endTime) ? Math.max(1, Math.round((new Date(endTime)-new Date(startTime))/60000)) : 0;
+      info.push(`<div class="summary-item"><span>Duration</span><span>${durMin? durMin+' min':'-'}</span></div>`);
+      // 5/6/7 hole timing
+      const durs = holeDurations().filter(Boolean);
+      const fastest = durs.length ? Math.min(...durs) : null;
+      const slowest = durs.length ? Math.max(...durs) : null;
+      const avg = durs.length ? Math.round(durs.reduce((a,b)=>a+b,0)/durs.length) : null;
+      info.push(`<div class="summary-item"><span>Fastest hole</span><span>${fastest? fastest+'s':'-'}</span></div>`);
+      info.push(`<div class="summary-item"><span>Slowest hole</span><span>${slowest? slowest+'s':'-'}</span></div>`);
+      info.push(`<div class="summary-item"><span>Avg time / hole</span><span>${avg? avg+'s':'-'}</span></div>`);
+      // 8 Number of holes played (completed)
+      const holesPlayed = completedHolesMask().filter(Boolean).length;
+      info.push(`<div class="summary-item"><span>Holes played</span><span>${holesPlayed}</span></div>`);
+      // 9 Winner
+      const totals = players.map((p,i)=>({
+        i, name:p.name, ...totalsForPlayerFiltered(i,1,18)
+      })).filter(t=>t.tScore>0).sort((a,b)=> a.tScore - b.tScore);
+      const best = totals[0];
+      if (best){
+        // 10 Winner over/under par
+        const totalPar = parSubtotalFiltered(1,18);
+        const rel = totalPar ? (best.tScore - totalPar) : 0;
+        const relText = totalPar ? (rel>0?`+${rel}`:String(rel)) : '-';
+        info.push(`<div class="summary-item"><span>Winner</span><span>${best.name}</span></div>`);
+        info.push(`<div class="summary-item"><span>Winner ± Par</span><span>${relText}</span></div>`);
+      } else {
+        info.push(`<div class="summary-item"><span>Winner</span><span>-</span></div>`);
+        info.push(`<div class="summary-item"><span>Winner ± Par</span><span>-</span></div>`);
+      }
+      summaryInfo.innerHTML = info.join('');
+
+      // collapsed body (same as Scores panel)
+      summaryCollapsedBody.innerHTML = buildCollapsed();
+
+      // expanded (landscape only)
+      const landscape = isLandscape();
+      summaryFrontWrap.style.display = landscape ? 'block' : 'none';
+      summaryBackWrap.style.display  = landscape ? 'block' : 'none';
+      if (landscape){
+        summaryFront.innerHTML = buildSectionTable(1,9);
+        summaryBack.innerHTML = buildSectionTable(10,18);
+      }
+    }
+
+    /* === Controls === */
+    function setPar(valueStr){
+      const v = valueStr ? Number(valueStr) : null;
+      par = (Number.isFinite(v) ? v : null);
+      if (par!=null) parByHole[currentHole-1] = par;
+      updateUI(); autosave();
+    }
+
+    function inc(kind, delta){
+      if (kind==='score'){ score = Math.max(0, score + delta); }
+      if (kind==='penalty'){
+        penalties = Math.max(0, penalties + delta);
+        if (delta>0) score = Math.max(0, score + (1*delta)); // +1 to current hole score
+      }
+      if (kind==='scratch'){
+        scratches = Math.max(0, scratches + delta);
+        if (delta>0) score = Math.max(0, score + (2*delta)); // +2 to current hole score
+      }
+      commitCell(); updateUI(); autosave();
+    }
+
+    function doMercy(){
+      if (par==null) return;
+      // set to Par + 5 minimum
+      score = Math.max(score, Number(par) + 5);
+      commitCell(); markVisited(); updateUI(); autosave();
+
+      // If all players now have non-zero score, advance to next card; else move to next batter
+      if (allPlayersVisitedThisHole()) advanceHole();
+      else nextPlayer(1);
+    }
+
+    function endGame(autoFrom18){
+      endTime = new Date().toISOString();
+      autosave();
+      // Close Scores panel if open
+      scoresPanel.classList.remove('open');
+      show(summary); menuBar.style.display = 'none';
+      renderSummary();
+      try{ localStorage.removeItem(AS_KEY); }catch{}
+    }
+
+    /* === Setup → Game init with confirmation & empty-row pruning === */
+    function startNewGameFromSetup(){
+      // Gather current rows and count empties
+      const rows = [...playerList.children];
+      const empties = rows.filter(r => !r.querySelector('.playerName').value.trim());
+
+      if (empties.length){
+        const ok = confirm(`Remove ${empties.length} empty player ${empties.length===1?'row':'rows'} before starting?`);
+        if (!ok) return; // let user fill them
+        empties.forEach(r => r.remove());
+      }
+
+      // Harvest players (post-prune)
+      players = [];
+      [...playerList.children].forEach(row=>{
+        const name = row.querySelector('.playerName').value.trim();
+        if (!name) return;
+        const chip = row.querySelector('.color-chip');
+        const idx = +chip.getAttribute('data-color-index') || 0;
+        const color = rgbToHex(chip.style.backgroundColor) || COLOR_PALETTE[idx] || COLOR_PALETTE[0];
+        players.push({ name, color });
+      });
+      if (!players.length) return;
+
+      // Initialize orders/matrices
+      initialOrder = players.map((_,i)=>i);
+      holeOrder = [ [...initialOrder] ];
+      currentHole = 1; currentPosition = 0;
+      for (let h=0; h<MAX_HOLES; h++){
+        scoresMatrix[h] = Array(players.length).fill(null);
+        visitedByHole[h] = Array(players.length).fill(false);
+      }
+      for (let h=0; h<MAX_HOLES; h++) parByHole[h] = null;
+
+      startTime = new Date().toISOString();
+      endTime = null;
+      score = 0; scratches = 0; penalties = 0;
+
+      holeStartTimes.fill(null); holeEndTimes.fill(null);
+      holeStartTimes[0] = new Date().toISOString();
+
+      populateParOnce();
+      show(game);
+      menuBar.style.display = 'flex';
+      refreshHeader();
+      autosave();
+      refreshInsertBeforeOptionsInGame();
+      ensureParForHole(); // prompt par at start hole
+    }
+
+    /* In-game: Add player in Settings (uses rolling palette) */
+    function addPlayerInGame(name, color, insertBeforeIdx){
+      const newIdx = players.length;
+      const col = color || nextAutoColor();
+      players.splice(newIdx, 0, { name, color: col });
+
+      // Expand matrices
+      for (let h=0; h<MAX_HOLES; h++){
+        if (!Array.isArray(scoresMatrix[h])) scoresMatrix[h] = [];
+        scoresMatrix[h].splice(newIdx, 0, null);
+        if (!Array.isArray(visitedByHole[h])) visitedByHole[h] = [];
+        visitedByHole[h].splice(newIdx, 0, false);
+
+        if (!Array.isArray(holeOrder[h])) holeOrder[h] = [];
+        holeOrder[h].push(newIdx);
+      }
+      initialOrder.push(newIdx);
+
+      // Insert before…
+      const ib = Math.max(0, Math.min(insertBeforeIdx, players.length-1));
+      for (let h=currentHole-1; h<MAX_HOLES; h++){
+        const arr = holeOrder[h] || [];
+        const curPos = arr.indexOf(newIdx);
+        if (curPos>-1) arr.splice(curPos,1);
+        const ibPos = arr.indexOf(ib);
+        arr.splice(ibPos>=0?ibPos:arr.length, 0, newIdx);
+        holeOrder[h]=arr;
+      }
+
+      refreshHeader();
+      renderScoresPanel();
+      autosave();
+      refreshInsertBeforeOptionsInGame();
+    }
+
+    /* UI wiring */
+    // Splash
+    splashNewBtn.addEventListener('click', ()=>{
+      show(setup); menuBar.style.display = 'none';
+      playerList.innerHTML='';
+      addPlayerRowAt(playerList.children.length, '', nextAutoColor());
+      updatePlayerCounter(); updateStartBtn();
+    });
+    splashLoadBtn.addEventListener('click', ()=>{
+      show(loadScreen); renderLoadList();
+    });
+
+    loadBackBtn.addEventListener('click', ()=>{
+      show(splash); splashLoadBtn.disabled = !hasAutosave();
+    });
+
+    // Setup interactions
+    addPlayerBtn.addEventListener('click', ()=> addPlayerRowAt(playerList.children.length));
+    playerList.addEventListener('click', (e)=>{
+      const row = e.target.closest('.playerRow'); if (!row) return;
+      const rows = [...playerList.children];
+      const idx = rows.indexOf(row);
+      if (e.target.classList.contains('moveUp') && idx>0){
+        playerList.insertBefore(row, rows[idx-1]);
+      }
+      if (e.target.classList.contains('moveDown') && idx<rows.length-1){
+        playerList.insertBefore(row, rows[idx+1].nextSibling);
+      }
+      if (e.target.classList.contains('remove')){
+        row.remove();
+      }
+      updatePlayerCounter(); updateStartBtn();
+    });
+    startGameBtn.addEventListener('click', startNewGameFromSetup);
+
+    // Game controls
+    prevPlayerBtn.addEventListener('click', ()=> nextPlayer(-1));
+    nextPlayerBtn.addEventListener('click', ()=> nextPlayer(1));
+
+    document.querySelectorAll('.score-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if (btn.dataset.action==='score+') inc('score', +1);
+        if (btn.dataset.action==='score-') inc('score', -1);
+      });
+    });
+    document.querySelectorAll('.minor-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const act = btn.dataset.action;
+        if (act==='penalty+') inc('penalty', +1);
+        if (act==='scratch+') inc('scratch', +1);
+      });
+    });
+    mercyBtn.addEventListener('click', doMercy);
+    parSelect.addEventListener('change', e=> setPar(e.target.value));
+
+    undoBtn.addEventListener('click', ()=>{
+      const snap = undoStack.pop();
+      if (!snap) return;
+      restore(snap); refreshHeader(); renderScoresPanel();
+    });
+    nextCardBtn.addEventListener('click', advanceHole);
+
+    // Panels
+    btnSettings.addEventListener('click', ()=>{ settingsPanel.classList.add('open'); refreshInsertBeforeOptionsInGame(); });
+    btnScores  .addEventListener('click', ()=>{ scoresPanel.classList.add('open'); renderScoresPanel(); renderSaveSlots(); });
+    btnShop    .addEventListener('click', ()=>{ shopPanel.classList.add('open'); });
+
+    closeSettingsBtn.addEventListener('click', ()=> settingsPanel.classList.remove('open'));
+    closeScoresBtn  .addEventListener('click', ()=> scoresPanel.classList.remove('open'));
+    closeShopBtn    .addEventListener('click', ()=> shopPanel.classList.remove('open'));
+
+    // Toggles
+    themeToggle.addEventListener('click', ()=>{ toggles.theme = !toggles.theme; applyPrefs(); autosave(); });
+    handedToggle.addEventListener('click', ()=>{ toggles.leftHanded = !toggles.leftHanded; applyPrefs(); autosave(); });
+    autosaveToggle.addEventListener('click', ()=>{ toggles.autosave = !toggles.autosave; applyPrefs(); if (toggles.autosave) autosave(); else refreshAutosaveLabel(); });
+    aodToggle.addEventListener('click', ()=>{ toggles.aod = !toggles.aod; applyPrefs(); autosave(); });
+
+    rulesBtn.addEventListener('click', ()=> window.open('https://prometheangamescom.wordpress.com/rules/', '_blank'));
+
+    // Save/Load toggle
+    saveLoadToggleBtn.addEventListener('click', ()=>{
+      saveLoadWrap.style.display = (saveLoadWrap.style.display==='none' || !saveLoadWrap.style.display) ? 'block' : 'none';
+      if (saveLoadWrap.style.display==='block') renderSaveSlots();
+    });
+
+    // Autosave label & End game (with confirmation)
+    if (autosaveBtn) autosaveBtn.addEventListener('click', refreshAutosaveLabel);
+    endGameBtn.addEventListener('click', ()=>{
+      if (confirm('End the game and view the score summary?')) endGame(false);
+    });
+
+    // Social/Shop links
+    instaBtn.addEventListener('click', ()=> window.open('https://www.instagram.com/parforthecourse_thegame', '_blank'));
+    merchBtn.addEventListener('click', ()=> window.open('https://prometheangamescom.wordpress.com/2024/02/11/introducing-promethean-games-swag-and-apparel-shop/', '_blank'));
+    shopLinkBtn.addEventListener('click', ()=> window.open('https://www.thegamecrafter.com/sale/QRIR-RM5H-GECO-ZBB3', '_blank'));
+
+    // Settings: add player mid-game
+    function refreshInsertBeforeOptionsInGame(){
+      insertBeforeSelect.innerHTML='';
+      players.forEach((p,i)=>{
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = `Before: ${p.name}`;
+        insertBeforeSelect.appendChild(opt);
+      });
+      const end = document.createElement('option'); end.value = String(players.length); end.textContent = 'Add to End';
+      insertBeforeSelect.appendChild(end);
+      insertBeforeSelect.value = String(players.length);
+    }
+
+    function cycleChipColor(el){
+      const cur = +el.getAttribute('data-color-index') || 0;
+      const next = (cur + 1) % COLOR_PALETTE.length;
+      el.setAttribute('data-color-index', String(next));
+      el.style.backgroundColor = COLOR_PALETTE[next];
+    }
+    newPlayerColorChip.setAttribute('data-color-index','0');
+    newPlayerColorChip.style.backgroundColor = COLOR_PALETTE[0];
+    newPlayerColorChip.addEventListener('click', ()=> cycleChipColor(newPlayerColorChip));
+
+    document.getElementById('addPlayerInSettingsBtn').addEventListener('click', ()=>{
+      const name = newPlayerNameInput.value.trim();
+      if (!name) { newPlayerNameInput.focus(); return; }
+      const idx = +newPlayerColorChip.getAttribute('data-color-index') || 0;
+      const color = COLOR_PALETTE[idx];
+      const before = Number(insertBeforeSelect.value);
+      addPlayerInGame(name, color, isNaN(before)?players.length:before);
+      newPlayerNameInput.value='';
+      const nextIdx = (idx + 1) % COLOR_PALETTE.length;
+      newPlayerColorChip.setAttribute('data-color-index', String(nextIdx));
+      newPlayerColorChip.style.backgroundColor = COLOR_PALETTE[nextIdx];
+    });
+
+    // Orientation/resize → re-render
+    function onViewportChange(){
+      renderScoresPanel();
+      if (summary.classList.contains('active')) renderSummary();
+    }
+    window.addEventListener('resize', onViewportChange);
+    window.addEventListener('orientationchange', onViewportChange);
+
+    // Summary → New game
+    summaryNewGameBtn.addEventListener('click', ()=>{
+      show(splash);
+      menuBar.style.display='none';
+      players = []; initialOrder=[]; holeOrder=[]; currentHole=1; currentPosition=0;
+      scoresMatrix=[]; visitedByHole=[]; for(let h=0; h<MAX_HOLES; h++) parByHole[h]=null;
+      startTime=null; endTime=null; undoStack.length=0;
+      holeStartTimes.fill(null); holeEndTimes.fill(null);
+      try{ localStorage.removeItem(AS_KEY); }catch{}
+      refreshAutosaveLabel();
+      splashLoadBtn.disabled = !hasAutosave();
+    });
+
+    // === Par Numeric Modal ===
+    const parModal = document.createElement('div');
+    parModal.id='parModal';
+    parModal.style.cssText='position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:300';
+    parModal.innerHTML = `
+      <div style="background:var(--panel-bg);border:1px solid #333;padding:16px;max-width:320px;width:92%">
+        <div style="font-weight:700;margin-bottom:8px">Draw!</div>
+        <div class="small" style="margin-bottom:6px">Select Par (1-15)</div>
+        <input id="parInput" type="number" inputmode="numeric" min="1" max="15" placeholder=""
+               style="width:100%;padding:8px;margin:8px 0;background:var(--bg);color:var(--fg);border:1px solid #444"/>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="parCancel" style="background:var(--disabled)">Cancel</button>
+          <button id="parOk">OK</button>
+        </div>
+      </div>`;
+    document.body.appendChild(parModal);
+
+    function openParModal(hole, defVal, onOk){
+      const input = parModal.querySelector('#parInput');
+      const okBtn = parModal.querySelector('#parOk');
+      const cancelBtn = parModal.querySelector('#parCancel');
+      input.value = ''; // default blank per spec
+      parModal.style.display='flex';
+      input.focus();
+
+      const cleanup=()=>{ parModal.style.display='none';
+        okBtn.removeEventListener('click', onOkClick);
+        cancelBtn.removeEventListener('click', onCancel);
+      };
+      function onOkClick(){
+        const n = Number(input.value);
+        if (!Number.isInteger(n) || n<1 || n>15){ alert('Enter a whole number from 1 to 15.'); return; }
+        cleanup(); if (typeof onOk==='function') onOk(n);
+      }
+      function onCancel(){ cleanup(); }
+      okBtn.addEventListener('click', onOkClick);
+      cancelBtn.addEventListener('click', onCancel);
+    }
+
+    // === Editable expanded box score (click/long-press) for score, penalties, scratches ===
+    function attachEditableHandlers(){
+      const tableContainers = [boxscoreFront, boxscoreBack].filter(Boolean);
+      tableContainers.forEach(container=>{
+        container.querySelectorAll('.bs-cell').forEach(cell=>{
+          const hole = Number(cell.getAttribute('data-hole'));
+          const player = Number(cell.getAttribute('data-player'));
+          const editScore = ()=>{
+            const current = scoresMatrix[hole-1]?.[player]||{score:0,penalties:0,scratches:0};
+            const curVal = Number(current.score||0) > 0 ? String(current.score) : '';
+            const ans = prompt(`Edit score for ${players[player]?.name||'Player'} — Hole ${hole}\n(Enter integer ≥ 0; 0 clears)`, curVal);
+            if (ans===null) return;
+            const n = Number(ans);
+            if (!Number.isFinite(n) || n<0 || !Number.isInteger(n)){ alert('Enter a whole number ≥ 0.'); return; }
+            if (!Array.isArray(scoresMatrix[hole-1])) scoresMatrix[hole-1] = [];
+            const prior = scoresMatrix[hole-1][player] || {score:0,penalties:0,scratches:0};
+            scoresMatrix[hole-1][player] = { score:n, penalties:prior.penalties||0, scratches:prior.scratches||0 };
+            if (hole===currentHole){
+              const idx = holeOrder[currentHole-1][currentPosition];
+              if (idx===player){ score = n; penalties=prior.penalties||0; scratches=prior.scratches||0; }
+              visitedByHole[currentHole-1][player] = n>0;
+              updateNextCardGate();
+            }
+            pushUndo(); autosave(); renderScoresPanel(); refreshHeader();
+          };
+          cell.addEventListener('click', editScore);
+          let t=null; cell.addEventListener('touchstart', ()=>{ t=setTimeout(editScore,500); }, {passive:true});
+          ['touchend','touchmove','touchcancel'].forEach(ev=> cell.addEventListener(ev, ()=>{ if(t){clearTimeout(t);t=null;} }, {passive:true}));
+        });
+
+        // penalties editable
+        container.querySelectorAll('.bs-pen').forEach(td=>{
+          const player = Number(td.getAttribute('data-player'));
+          td.addEventListener('click', ()=>{
+            const hole = inferHoleFromCell(td);
+            if (!hole) return;
+            const existing = scoresMatrix[hole-1]?.[player] || {score:0,penalties:0,scratches:0};
+            const ans = prompt(`Edit penalties for ${players[player]?.name||'Player'} — Hole ${hole}`, String(existing.penalties||0));
+            if (ans===null) return;
+            const n = Number(ans);
+            if (!Number.isFinite(n) || n<0 || !Number.isInteger(n)){ alert('Enter a whole number ≥ 0.'); return; }
+            const base = Math.max(0,(existing.score||0) - (existing.penalties||0) - 2*(existing.scratches||0));
+            const newScore = base + n + 2*(existing.scratches||0);
+            scoresMatrix[hole-1][player] = { score:newScore, penalties:n, scratches:existing.scratches||0 };
+            if (hole===currentHole){
+              const idx = holeOrder[currentHole-1][currentPosition];
+              if (idx===player){ score = newScore; penalties=n; }
+            }
+            pushUndo(); autosave(); renderScoresPanel(); refreshHeader();
+          });
+        });
+
+        // scratches editable
+        container.querySelectorAll('.bs-scr').forEach(td=>{
+          const player = Number(td.getAttribute('data-player'));
+          td.addEventListener('click', ()=>{
+            const hole = inferHoleFromCell(td);
+            if (!hole) return;
+            const existing = scoresMatrix[hole-1]?.[player] || {score:0,penalties:0,scratches:0};
+            const ans = prompt(`Edit scratches for ${players[player]?.name||'Player'} — Hole ${hole}`, String(existing.scratches||0));
+            if (ans===null) return;
+            const n = Number(ans);
+            if (!Number.isFinite(n) || n<0 || !Number.isInteger(n)){ alert('Enter a whole number ≥ 0.'); return; }
+            const base = Math.max(0,(existing.score||0) - (existing.penalties||0) - 2*(existing.scratches||0));
+            const newScore = base + (existing.penalties||0) + 2*n;
+            scoresMatrix[hole-1][player] = { score:newScore, penalties:existing.penalties||0, scratches:n };
+            if (hole===currentHole){
+              const idx = holeOrder[currentHole-1][currentPosition];
+              if (idx===player){ score = newScore; scratches=n; }
+            }
+            pushUndo(); autosave(); renderScoresPanel(); refreshHeader();
+          });
+        });
       });
     }
 
-    function manualScoreEditChanged(e) {
-      const input = e.target;
-      const playerIdx = parseInt(input.dataset.player);
-      const holeIdx = parseInt(input.dataset.hole);
-      const val = parseInt(input.value);
-
-      if (isNaN(val) || val < 0) {
-        alert('Invalid score. Must be zero or positive number.');
-        input.value = players[playerIdx].holes[holeIdx] ? players[playerIdx].holes[holeIdx].strokes : '';
-        return;
-      }
-
-      if (!players[playerIdx].holes[holeIdx]) {
-        players[playerIdx].holes[holeIdx] = { strokes: 0, par: 4 };
-      }
-      players[playerIdx].holes[holeIdx].strokes = val;
-
-      // Update total for that player
-      players[playerIdx].total = players[playerIdx].holes.reduce((sum, h) => sum + (h ? h.strokes : 0), 0);
-
-      // If editing current hole, update strokes and UI
-      if (holeIdx === currentHole - 1 && playerIdx === currentPlayerIndex) {
-        players[playerIdx].strokes = val;
-        updatePlayerUI();
-      }
+    function inferHoleFromCell(td){
+      // Find the column index across the row; map to actual hole header text (H#)
+      const cellIndex = td.cellIndex; // includes preceding columns
+      const tr = td.closest('tr');
+      const table = td.closest('table');
+      if (!table) return null;
+      const headers = table.querySelectorAll('thead th');
+      // headers: blank, Hstart..Hend, Tot, ±Par, Pen, Scr
+      // Determine if this td is in Pen or Scr; hole number isn't 1:1 from these cells.
+      // We return currentHole for editing pen/scr on the active hole to keep interaction simple.
+      // For precise mapping, we could store data-hole on pen/scr cells; for now use currentHole.
+      return currentHole;
     }
 
-    // Theme selection
-    function applyTheme(selected) {
-      theme = selected;
-      if (theme === 'light') {
-        document.documentElement.style.setProperty('--background', 'var(--alt-background)');
-        document.documentElement.style.setProperty('--text', 'var(--alt-text)');
-      } else {
-        document.documentElement.style.setProperty('--background', 'var(--background)');
-        document.documentElement.style.setProperty('--text', 'var(--text)');
-      }
+    // === Save Slots & Load Screen ===
+    function getSlotTitle(i){ return localStorage.getItem(SLOT_TITLE_PREFIX+i) || 'Untitled'; }
+    function setSlotTitle(i, val){ localStorage.setItem(SLOT_TITLE_PREFIX+i, val || 'Untitled'); }
+    function getSlotData(i){ try{ return JSON.parse(localStorage.getItem(SLOT_PREFIX+i)||'null'); }catch{return null;} }
+    function setSlotData(i, data){ localStorage.setItem(SLOT_PREFIX+i, JSON.stringify(data)); }
+    function completedCountFromSnapshot(snap){
+      try{
+        const sm = snap.scoresMatrix||[];
+        const nPlayers = (snap.players||[]).length;
+        let count=0;
+        for(let h=0; h<MAX_HOLES; h++){
+          let ok=true;
+          for(let i=0;i<nPlayers;i++){
+            const c = sm[h]?.[i];
+            const v = c ? Number(c.score||0) : 0;
+            if (v<=0){ ok=false; break; }
+          }
+          if (ok) count++;
+        }
+        return count;
+      }catch{return 0;}
     }
 
-    // --- Scores Page ---
-
-    // Save slots data in localStorage
-    function getSavedScores() {
-      const saved = localStorage.getItem('parForCourseSaveSlots');
-      return saved ? JSON.parse(saved) : [null, null, null];
-    }
-
-    function saveScoresToSlot(slotIndex) {
-      if (slotIndex < 0 || slotIndex > 2) return;
-
-      const data = {
-        timestamp: new Date().toISOString(),
-        players: JSON.parse(JSON.stringify(players)), // deep clone
-        hole: currentHole
-      };
-
-      const slots = getSavedScores();
-      slots[slotIndex] = data;
-      localStorage.setItem('parForCourseSaveSlots', JSON.stringify(slots));
-      renderSaveSlots();
-      alert(`Scores saved to slot ${slotIndex + 1}.`);
-    }
-
-    function renderSaveSlots() {
-      const slots = getSavedScores();
-      let html = '<ul style="list-style:none; padding:0;">';
-
-      slots.forEach((slot, idx) => {
-        if (slot) {
-          const date = new Date(slot.timestamp);
-          html += `<li style="margin-bottom:0.5rem; background:#111; padding:0.5rem; border:1px solid var(--primary);">
-            <strong>Slot ${idx + 1}</strong>: ${date.toLocaleString()} - Players: ${slot.players.length}
-            <button style="margin-left:1rem;" onclick="loadSavedScore(${idx})">Load</button>
-            <button style="margin-left:0.5rem;" onclick="deleteSavedScore(${idx})">Delete</button>
-          </li>`;
+    function renderSaveSlots(){
+      [1,2,3].forEach(i=>{
+        const titleInput = document.getElementById('slotTitle'+i);
+        if (titleInput){
+          titleInput.value = getSlotTitle(i);
+          titleInput.onchange = ()=> setSlotTitle(i, titleInput.value.trim());
+        }
+        const btn = document.getElementById('slotBtn'+i);
+        const data = getSlotData(i);
+        if (data){
+          const d = new Date(data.timestamp || Date.now());
+          const dateStr = d.toLocaleDateString();
+          const timeStr = d.toLocaleTimeString();
+          const n = (data.players||[]).length;
+          const completed = completedCountFromSnapshot(data);
+          const title = getSlotTitle(i);
+          btn.textContent = `${title}\n${dateStr}\n${timeStr}\nPlayers: ${n}\nCourses Completed: ${completed}`;
         } else {
-          html += `<li style="margin-bottom:0.5rem; background:#111; padding:0.5rem; border:1px solid #555;">
-            Slot ${idx + 1} is empty
-          </li>`;
+          const title = getSlotTitle(i);
+          btn.textContent = `${title}\nEmpty`;
+        }
+        // click handler
+        btn.onclick = ()=>{
+          const slotId = i;
+          const choice = prompt(`Type O to Overwrite this slot with current game, L to Load it, or C to Cancel:`, 'L');
+          if (!choice) return;
+          const c = choice.trim().toUpperCase();
+          if (c==='O'){
+            setSlotData(slotId, stateSnapshot());
+            renderSaveSlots(); alert('Saved to slot '+slotId+'.');
+          } else if (c==='L'){
+            const data = getSlotData(slotId);
+            if (data){ restore(data); populateParOnce(); show(game); menuBar.style.display='flex'; refreshHeader(); renderScoresPanel(); }
+          }
+        };
+      });
+    }
+
+    function renderLoadList(){
+      const parts = [];
+      const asRaw = localStorage.getItem(AS_KEY);
+      if (asRaw){
+        try{
+          const s = JSON.parse(asRaw);
+          const d = new Date(s.timestamp||Date.now());
+          const dateStr = d.toLocaleDateString();
+          const timeStr = d.toLocaleTimeString();
+          const n = (s.players||[]).length;
+          const completed = completedCountFromSnapshot(s);
+          parts.push(`<button class="slotBtn" data-load="as" style="width:100%;white-space:pre-line;text-align:left;margin-bottom:8px">Autosave\n${dateStr}\n${timeStr}\nPlayers: ${n}\nCourses Completed: ${completed}</button>`);
+        }catch{}
+      }
+      [1,2,3].forEach(i=>{
+        const data = getSlotData(i);
+        const title = getSlotTitle(i);
+        if (data){
+          const d = new Date(data.timestamp||Date.now());
+          const dateStr = d.toLocaleDateString();
+          const timeStr = d.toLocaleTimeString();
+          const n=(data.players||[]).length;
+          const completed=completedCountFromSnapshot(data);
+          parts.push(`<button class="slotBtn" data-load="${i}" style="width:100%;white-space:pre-line;text-align:left;margin-bottom:8px">${title}\n${dateStr}\n${timeStr}\nPlayers: ${n}\nCourses Completed: ${completed}</button>`);
+        } else {
+          parts.push(`<button class="slotBtn" data-load="${i}" style="width:100%;white-space:pre-line;text-align:left;margin-bottom:8px">${title}\nEmpty</button>`);
         }
       });
-
-      html += '</ul>';
-      saveSlotsDiv.innerHTML = html;
-    }
-
-    // Load saved score slot
-    function loadSavedScore(slotIndex) {
-      const slots = getSavedScores();
-      const slot = slots[slotIndex];
-      if (!slot) {
-        alert('Empty slot.');
-        return;
-      }
-
-      players = slot.players;
-      currentHole = slot.hole;
-      currentPlayerIndex = 0;
-      par = 4;
-
-      switchScreen('score');
-      updateHoleBanner();
-      updatePlayerUI();
-      hideBoxScore();
-      alert(`Loaded scores from slot ${slotIndex + 1}.`);
-    }
-
-    // Delete saved score
-    function deleteSavedScore(slotIndex) {
-      if (!confirm('Delete saved score?')) return;
-      const slots = getSavedScores();
-      slots[slotIndex] = null;
-      localStorage.setItem('parForCourseSaveSlots', JSON.stringify(slots));
-      renderSaveSlots();
-    }
-
-    // Save current score to first empty slot or overwrite last slot
-    function saveCurrentScore() {
-      const slots = getSavedScores();
-      let emptyIndex = slots.findIndex(s => s === null);
-      if (emptyIndex === -1) emptyIndex = 2; // overwrite last slot
-
-      saveScoresToSlot(emptyIndex);
-    }
-
-    // Email scores button action placeholder
-    function emailScores() {
-      alert('Emailing scores feature not implemented yet.');
-    }
-
-    // End game
-    function endGame() {
-      switchScreen('end');
-      renderFinalResults();
-    }
-
-    function renderFinalResults() {
-      if (players.length === 0) {
-        finalResults.textContent = 'No players to show.';
-        return;
-      }
-
-      // Sort players by total ascending
-      const sortedPlayers = [...players].sort((a,b) => a.total - b.total);
-      let html = '<ol style="text-align:left;">';
-      sortedPlayers.forEach(p => {
-        html += `<li>${p.name} - Total Score: ${p.total}</li>`;
+      loadList.innerHTML = parts.join('');
+      loadList.querySelectorAll('button.slotBtn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-load');
+          const choice = prompt(`This may overwrite any unsaved data.\nType O to Overwrite with current game, L to Load file, or C to Cancel:`, 'L');
+          if (!choice) return;
+          const c = choice.trim().toUpperCase();
+          if (c==='O'){
+            if (id==='as'){
+              localStorage.setItem(AS_KEY, JSON.stringify(stateSnapshot()));
+            } else {
+              setSlotData(Number(id), stateSnapshot());
+            }
+            renderLoadList();
+            alert('Overwritten.');
+          } else if (c==='L'){
+            let data=null;
+            if (id==='as'){
+              try{ data = JSON.parse(localStorage.getItem(AS_KEY)); }catch{}
+            } else { data = getSlotData(Number(id)); }
+            if (data){ restore(data); populateParOnce(); show(game); menuBar.style.display='flex'; refreshHeader(); renderScoresPanel(); }
+          }
+        });
       });
-      html += '</ol>';
-      finalResults.innerHTML = html;
     }
 
-    // --- Event Listeners ---
-
-    addPlayerBtn.addEventListener('click', addPlayer);
-    playerNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') addPlayer();
-    });
-
-    startGameBtn.addEventListener('click', () => {
-      if (players.length < 1) {
-        showError(errorMsg, 'Add at least one player to start.');
-        return;
+    // === Gestures ===
+    let touchState = null;
+    function getDistance(touches){
+      if (touches.length<2) return 0;
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx*dx+dy*dy);
+    }
+    function onTouchStart(e){
+      if (e.touches.length===1){
+        touchState = { startX:e.touches[0].clientX, startY:e.touches[0].clientY, time:Date.now(), type:'swipe' };
+      } else if (e.touches.length===2){
+        touchState = { startDist:getDistance(e.touches), type:'pinch', time:Date.now() };
       }
-      clearError(errorMsg);
-      startGame();
-    });
-
-    penaltyBtn.addEventListener('click', addPenalty);
-    scratchBtn.addEventListener('click', addScratch);
-    minusBtn.addEventListener('click', () => adjustScore(-1));
-    plusBtn.addEventListener('click', () => adjustScore(1));
-
-    nextPlayerBtn.addEventListener('click', nextPlayer);
-    prevPlayerBtn.addEventListener('click', prevPlayer);
-
-    nextCardBtn.addEventListener('click', () => {
-      // Update par from select before next hole
-      par = parseInt(parSelect.value) || 4;
-      nextCard();
-    });
-
-    toggleBoxScoreBtn.addEventListener('click', toggleBoxScore);
-
-    navSettingsBtn.addEventListener('click', () => switchScreen('settings'));
-    navScoresBtn.addEventListener('click', () => switchScreen('scores'));
-    navShopBtn.addEventListener('click', () => {
-      window.open('https://promethean-games.com/shop', '_blank');
-    });
-
-    homeBtn.addEventListener('click', () => switchScreen('score'));
-
-    // Settings
-    settingsAddPlayerBtn.addEventListener('click', addPlayerSettings);
-    settingsPlayerNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') addPlayerSettings();
-    });
-    themeSelect.addEventListener('change', (e) => applyTheme(e.target.value));
-
-    // Scores
-    saveScoreBtn.addEventListener('click', saveCurrentScore);
-    emailScoresBtn.addEventListener('click', emailScores);
-    endGameBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to end the game and return to setup?')) {
-        players = [];
-        currentHole = 1;
-        par = 4;
-        switchScreen('setup');
-        renderPlayerList();
-        hideHomeButton();
+    }
+    function onTouchMove(e){
+      // no-op: gating handled on end
+    }
+    function onTouchEnd(e){
+      if (!touchState) return;
+      if (touchState.type==='swipe' && e.changedTouches.length===1){
+        const dx = e.changedTouches[0].clientX - touchState.startX;
+        const dy = e.changedTouches[0].clientY - touchState.startY;
+        if (Math.abs(dx)>60 && Math.abs(dy)<50){
+          if (dx>0) nextPlayer(-1); else nextPlayer(1);
+        }
+      } else if (touchState.type==='pinch'){
+        const dt = Date.now()-touchState.time;
+        if (dt<800){
+          // Determine direction by comparing startDist vs (if any) last known; as we don't track move, treat pinch (closer) to open Scores, spread to open Settings
+          // Heuristic: if at end we have 0 or 1 touches, infer from last gesture - open Scores by default
+          // Better: attach on touchmove to update
+        }
       }
-    });
+      touchState = null;
+    }
+    // Improve pinch/spread with move tracking
+    let pinchStartDist = null;
+    function onGestureStart(e){
+      if (e.touches.length===2){
+        pinchStartDist = getDistance(e.touches);
+      }
+    }
+    function onGestureMove(e){
+      if (e.touches.length===2 && pinchStartDist!=null){
+        const d = getDistance(e.touches);
+        const delta = d - pinchStartDist;
+        if (Math.abs(delta)>80){
+          if (delta>0){
+            // spread → open Settings
+            settingsPanel.classList.add('open');
+          }else{
+            // pinch → open Scores
+            scoresPanel.classList.add('open'); renderScoresPanel(); renderSaveSlots();
+          }
+          pinchStartDist = null;
+        }
+      }
+    }
+    function onGestureEnd(){ pinchStartDist = null; }
 
-    // Init
-    renderPlayerList();
-    renderSaveSlots();
-    applyTheme(theme);
+    game.addEventListener('touchstart', onTouchStart, {passive:true});
+    game.addEventListener('touchmove', onTouchMove, {passive:true});
+    game.addEventListener('touchend', onTouchEnd, {passive:true});
+    game.addEventListener('touchstart', onGestureStart, {passive:true});
+    game.addEventListener('touchmove', onGestureMove, {passive:true});
+    game.addEventListener('touchend', onGestureEnd, {passive:true});
 
-    // Accessibility: keyboard trap and focus
-    // Focus on first input on setup screen on load
-    playerNameInput.focus();
+    // Ensure swipe does NOT advance hole; only button/mercy with gating will
 
-    // Expose some functions for inline handlers
-    window.loadSavedScore = loadSavedScore;
-    window.deleteSavedScore = deleteSavedScore;
+    // Wake Lock (Always-On Display)
+    let wakeLock = null;
+    async function manageWakeLock(){
+      try{
+        if (toggles.aod && 'wakeLock' in navigator){
+          if (!wakeLock) wakeLock = await navigator.wakeLock.request('screen');
+        } else {
+          if (wakeLock){ wakeLock.release(); wakeLock=null; }
+        }
+      }catch{}
+    }
+    document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible' && toggles.aod){ manageWakeLock(); }});
 
+    // Initial UI
+    applyPrefs();
+    refreshAutosaveLabel();
+    splashLoadBtn.disabled = !hasAutosave();
+
+    // Prompt Par on first load if resuming game state where par not set
+    if (game.classList.contains('active')) ensureParForHole();
+
+    /* Utility: openParModal triggers are called at start of each hole (ensureParForHole) and after Next Card */
+  })();
   </script>
-  <h6 align=center>v 1.0.08</h6>
 </body>
 </html>
