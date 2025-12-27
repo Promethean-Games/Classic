@@ -1,11 +1,666 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Par for the Course Tournament • Betsy’s Billiards (Austin, TX)</title>
+  <meta name="description" content="Par for the Course – Tournament format (18 holes) at Betsy’s Billiards in Austin, Texas. $10 entry. Played on 8-foot Diamond tables." />
+
+  <style>
+    :root{
+      --bg:#0b0d10;
+      --text:#f4f6f8;
+      --muted:rgba(244,246,248,.72);
+      --stroke:rgba(255,255,255,.10);
+      --panel:rgba(0,0,0,.22);
+      --panel2:rgba(255,255,255,.03);
+
+      --accent:#d11111; /* Promethean red */
+      --accentSoft: rgba(209,17,17,.16);
+
+      --good:#22c55e;
+      --warn:#f59e0b;
+
+      --radius:18px;
+      --shadow: 0 18px 45px rgba(0,0,0,.55);
+      --max: 1100px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 18% 12%, rgba(209,17,17,.18), transparent 60%),
+        radial-gradient(900px 500px at 82% 18%, rgba(0,229,255,.08), transparent 60%),
+        linear-gradient(180deg, #07080a, var(--bg));
+    }
+
+    a{color:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:24px}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; padding:12px 0;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      text-decoration:none;
+      min-width: 240px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      display:grid; place-items:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:before{
+      content:"";
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 30% 30%, rgba(209,17,17,.55), transparent 55%);
+      transform: rotate(25deg);
+    }
+    .logo span{position:relative; font-weight:900; letter-spacing:.5px}
+    .brand strong{display:block; font-size:14px; letter-spacing:.2px}
+    .brand small{display:block; color:var(--muted); font-size:12px; margin-top:2px}
+
+    .nav{display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+    .nav a{
+      text-decoration:none; color:var(--muted); font-size:13px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid transparent;
+    }
+    .nav a:hover{color:var(--text); border-color:var(--stroke); background:rgba(255,255,255,.03)}
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:12px 14px; border-radius:999px;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.04);
+      text-decoration:none;
+      font-weight:700; font-size:14px;
+      gap:10px;
+      transition: transform .12s ease, background .12s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); background:rgba(255,255,255,.06)}
+    .btn.primary{
+      border-color: rgba(209,17,17,.55);
+      background: linear-gradient(180deg, rgba(209,17,17,.88), rgba(209,17,17,.58));
+      box-shadow: 0 14px 28px rgba(209,17,17,.18);
+    }
+    .btn.primary:hover{background: linear-gradient(180deg, rgba(209,17,17,.95), rgba(209,17,17,.65))}
+    .btn.ghost{
+      border-color: rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+
+    .hero{
+      margin-top:14px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border-radius: calc(var(--radius) + 8px);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .heroInner{
+      padding:28px;
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:18px;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.22);
+      color:var(--muted);
+      font-size:13px;
+      width:fit-content;
+      flex-wrap:wrap;
+    }
+    .tag b{color:var(--text)}
+    h1{
+      margin:14px 0 10px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height:1.05;
+      letter-spacing:-.6px;
+    }
+    .sub{
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.6;
+      max-width: 62ch;
+      margin:0 0 18px;
+    }
+    .ctaRow{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+
+    .banner{
+      margin-top:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      border-radius: 16px;
+      padding:12px 14px;
+      color: rgba(244,246,248,.78);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .banner b{color:var(--text)}
+    .banner .dot{
+      display:inline-block; width:8px; height:8px; border-radius:99px;
+      background: rgba(245,158,11,.8);
+      margin-right:8px;
+      box-shadow: 0 0 0 4px rgba(245,158,11,.14);
+      vertical-align:middle;
+    }
+
+    .card{
+      border:1px solid var(--stroke);
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding:16px;
+    }
+    .stats{display:grid; gap:10px;}
+    .stat{
+      display:flex; justify-content:space-between; gap:10px;
+      font-size:14px; color:var(--muted);
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: var(--panel2);
+    }
+    .stat b{color:var(--text); font-weight:800}
+
+    .grid{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+    .col-7{grid-column: span 7}
+    .col-5{grid-column: span 5}
+    .col-6{grid-column: span 6}
+    .col-12{grid-column: span 12}
+
+    h2{
+      margin:0 0 10px;
+      font-size:22px;
+      letter-spacing:-.2px;
+    }
+    p{margin:0; color:var(--muted); line-height:1.65}
+    ul{margin:10px 0 0; padding-left:18px; color:var(--muted); line-height:1.65}
+    li{margin:6px 0}
+    b{color:var(--text)}
+
+    .kicker{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .pill{
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill.good{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); color: rgba(244,246,248,.85)}
+    .pill.warn{border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); color: rgba(244,246,248,.85)}
+    .pill.accent{border-color: rgba(209,17,17,.35); background: rgba(209,17,17,.10); color: rgba(244,246,248,.88)}
+
+    .steps{display:grid; gap:10px; margin-top:10px}
+    .step{
+      display:flex; gap:12px; align-items:flex-start;
+      border:1px solid rgba(255,255,255,.08);
+      background: var(--panel2);
+      padding:12px;
+      border-radius: 16px;
+    }
+    .num{
+      width:28px; height:28px; border-radius:10px;
+      display:grid; place-items:center;
+      border:1px solid rgba(209,17,17,.55);
+      background: var(--accentSoft);
+      font-weight:900;
+      flex:0 0 auto;
+    }
+
+    .faq details{
+      border:1px solid rgba(255,255,255,.08);
+      background: var(--panel2);
+      border-radius: 16px;
+      padding:12px 14px;
+    }
+    .faq details + details{margin-top:10px}
+    .faq summary{
+      cursor:pointer;
+      font-weight:800;
+      color:var(--text);
+      list-style:none;
+      outline:none;
+    }
+    .faq summary::-webkit-details-marker{display:none}
+    .faq .a{margin-top:8px}
+
+    .formRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    label{font-size:12px; color:var(--muted); display:block; margin:0 0 6px}
+    input, textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:92px; resize:vertical}
+    .full{grid-column: 1 / -1}
+    .note{margin-top:10px; font-size:13px; color:var(--muted)}
+    .toast{
+      display:none;
+      margin-top:12px;
+      border-radius: 16px;
+      padding:12px 14px;
+      border:1px solid rgba(34,197,94,.35);
+      background: rgba(34,197,94,.12);
+      color: rgba(244,246,248,.90);
+      line-height:1.45;
+    }
+    .toast.show{display:block;}
+
+    .footer{
+      margin:26px 0 10px;
+      padding:18px 0 0;
+      border-top:1px solid rgba(255,255,255,.08);
+      color:rgba(244,246,248,.55);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    @media (max-width: 900px){
+      .heroInner{grid-template-columns: 1fr}
+      .grid{gap:12px}
+      .col-7,.col-5,.col-6,.col-12{grid-column: 1 / -1}
+      .formRow{grid-template-columns: 1fr}
+      .nav{justify-content:flex-start}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Back to top">
+        <div class="logo" aria-hidden="true"><span>P</span></div>
+        <div>
+          <strong>Par for the Course</strong>
+          <small>TOURNAMENT • BETSY’S BILLIARDS</small>
+        </div>
+      </a>
+
+      <nav class="nav" aria-label="Page navigation">
+        <a href="#format">Format</a>
+        <a href="#schedule">Schedule</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn primary" href="#register">Register</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <!-- HERO -->
+      <section class="hero" aria-label="Event hero">
+        <div class="heroInner">
+          <div>
+            <div class="tag">
+              <span>📍 <b>Betsy’s Billiards</b> • Austin, Texas</span>
+              <span>•</span>
+              <span>🎱 <b>8-foot Diamond</b> tables</span>
+              <span>•</span>
+              <span>💵 <b>$10</b> entry</span>
+            </div>
+
+            <h1>Par for the Course Tournament</h1>
+            <p class="sub">
+              A course-style pool tournament in the <b>Par for the Course – Tournament</b> format:
+              <b>18 holes</b> designed to reward smart patterns, cue-ball control, and clean execution.
+            </p>
+
+            <div class="ctaRow">
+              <a class="btn primary" href="#register">Register</a>
+              <a class="btn ghost" href="#format">See Format</a>
+            </div>
+
+            <div class="kicker" aria-label="Highlights">
+              <span class="pill good">18 holes</span>
+              <span class="pill accent">Par for the Course – Tournament</span>
+              <span class="pill">Groups rotate tables</span>
+              <span class="pill warn">Start time announced day-of</span>
+            </div>
+
+            <div class="banner" role="note">
+              <span class="dot" aria-hidden="true"></span>
+              Some details (exact table count, pacing, and payouts) are finalized <b>on-site</b> based on turnout and table availability.
+            </div>
+          </div>
+
+          <aside class="card" aria-label="Quick facts">
+            <h2 style="margin-bottom:12px;">Quick Facts</h2>
+            <div class="stats">
+              <div class="stat"><span>Entry</span> <b>$10</b></div>
+              <div class="stat"><span>Location</span> <b>Betsy’s Billiards (Austin, TX)</b></div>
+              <div class="stat"><span>Tables</span> <b>8-foot Diamond</b></div>
+              <div class="stat"><span>Format</span> <b>18 holes • table rotation</b></div>
+              <div class="stat"><span>Check-in</span> <b>Announced on-site</b></div>
+              <div class="stat"><span>Start</span> <b>Announced on-site</b></div>
+            </div>
+
+            <p class="note">
+              Bring your cue and a phone (quick score verification). Show up early to get settled.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- DETAILS -->
+      <section class="grid" aria-label="Event details">
+        <div class="card col-7">
+          <h2>What you’re walking into</h2>
+          <p>
+            This is built to feel competitive without getting messy. The scoring rewards fundamentals:
+            position, shot selection, and staying out of trouble.
+          </p>
+          <ul>
+            <li><b>Skill-forward scoring:</b> your decisions show up on the card.</li>
+            <li><b>Efficient flow:</b> groups rotate across tables to complete all 18 holes.</li>
+            <li><b>Simple buy-in:</b> $10 entry, clean format, good vibes.</li>
+          </ul>
+        </div>
+
+        <div class="card col-5" id="format">
+          <h2>Format</h2>
+          <div class="steps">
+            <div class="step">
+              <div class="num">1</div>
+              <div>
+                <b>18 holes total</b>
+                <div style="color:var(--muted); margin-top:2px;">
+                  The full event is <b>18</b> scored holes (Par for the Course – Tournament).
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="num">2</div>
+              <div>
+                <b>Groups across available tables</b>
+                <div style="color:var(--muted); margin-top:2px;">
+                  Players are split into groups based on turnout and table availability.
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="num">3</div>
+              <div>
+                <b>Complete a set of holes per table</b>
+                <div style="color:var(--muted); margin-top:2px;">
+                  Each table has a planned “chunk” of holes; your group completes them, records scores, then rotates.
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="num">4</div>
+              <div>
+                <b>Rotate until all 18 are complete</b>
+                <div style="color:var(--muted); margin-top:2px;">
+                  Rotate table-to-table until the full 18-hole card is finished.
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="num">5</div>
+              <div>
+                <b>Lowest total wins</b>
+                <div style="color:var(--muted); margin-top:2px;">
+                  Lowest total score takes it. Any ties are resolved using the event’s on-site playoff procedure.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kicker">
+            <span class="pill">8' Diamond tables</span>
+            <span class="pill">18-hole scorecard</span>
+            <span class="pill">Rotation-based pace</span>
+          </div>
+        </div>
+
+        <div class="card col-12" id="schedule">
+          <h2>Schedule</h2>
+          <p>
+            Check-in time, player meeting, and start time are announced <b>on-site</b> (based on turnout and table availability).
+            Plan to arrive early so you’re not rushing.
+          </p>
+        </div>
+
+        <div class="card col-7">
+          <h2>Location</h2>
+          <p>
+            <b>Betsy’s Billiards</b><br/>
+            Austin, Texas
+          </p>
+          <p class="note">
+            If you share this page, it’s enough for people to know where/what/how much. The remaining logistics are announced at the room.
+          </p>
+        </div>
+
+        <div class="card col-5" id="register">
+          <h2>Register</h2>
+          <p>
+            This form keeps a simple on-page sign-up list (no external links needed). After submitting,
+            you’ll get a confirmation message you can copy/share.
+          </p>
+
+          <form id="regForm" autocomplete="on" style="margin-top:10px;">
+            <div class="formRow">
+              <div>
+                <label for="name">Player name</label>
+                <input id="name" name="name" placeholder="Your name" required />
+              </div>
+
+              <div>
+                <label for="phone">Mobile (optional)</label>
+                <input id="phone" name="phone" placeholder="(###) ###-####" inputmode="tel" />
+              </div>
+
+              <div class="full">
+                <label for="note">Notes (optional)</label>
+                <textarea id="note" name="note" placeholder="Skill level, questions, or anything helpful."></textarea>
+              </div>
+            </div>
+
+            <div class="ctaRow" style="margin-top:14px;">
+              <button class="btn primary" type="submit">Submit Registration</button>
+              <button class="btn ghost" type="button" id="copyBtn">Copy Confirmation</button>
+            </div>
+
+            <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+            <p class="note">
+              Entry fee is <b>$10</b>, paid at the room.
+            </p>
+          </form>
+        </div>
+
+        <div class="card col-12 faq" id="faq">
+          <h2>FAQ</h2>
+
+          <details>
+            <summary>What is “Par for the Course – Tournament”?</summary>
+            <div class="a">
+              <p>
+                It’s a course-style format: <b>18 holes</b> scored on a card. You’re rewarded for clean patterns, good position,
+                and disciplined execution.
+              </p>
+            </div>
+          </details>
+
+          <details>
+            <summary>How many tables and how many holes per table?</summary>
+            <div class="a">
+              <p>
+                It’s based on turnout and table availability. The organizer splits players into groups, assigns a starting table,
+                and sets the hole “chunks” per table so everyone completes all <b>18 holes</b> via rotation.
+              </p>
+            </div>
+          </details>
+
+          <details>
+            <summary>What tables are we playing on?</summary>
+            <div class="a">
+              <p><b>8-foot Diamond</b> tables.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>How much is entry?</summary>
+            <div class="a">
+              <p><b>$10</b> entry, paid at the room.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Do I need to own the Par for the Course deck?</summary>
+            <div class="a">
+              <p>No. Scorecards / course details are provided for tournament play.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>How are ties handled?</summary>
+            <div class="a">
+              <p>
+                Ties are resolved using the on-site playoff procedure announced before play begins.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <div class="footer">
+        <span>© <span id="yr"></span> Promethean Games • Par for the Course</span>
+        <span>Betsy’s Billiards • Austin, TX • $10 entry • 18 holes • 8' Diamond</span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const KEY = "pftc_tournament_registrations";
+    const yr = document.getElementById("yr");
+    yr.textContent = new Date().getFullYear();
+
+    const form = document.getElementById("regForm");
+    const toast = document.getElementById("toast");
+    const copyBtn = document.getElementById("copyBtn");
+
+    let lastConfirmationText = "";
+
+    function loadRegs(){
+      try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+      catch { return []; }
+    }
+
+    function saveReg(reg){
+      const regs = loadRegs();
+      regs.push(reg);
+      localStorage.setItem(KEY, JSON.stringify(regs));
+      return regs.length;
+    }
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      window.setTimeout(() => toast.classList.remove("show"), 6000);
+    }
+
+    function buildConfirmation(reg, position){
+      // No “placeholders” here: anything unknown is intentionally stated as on-site.
+      return [
+        "Registration submitted ✅",
+        "",
+        `Event: Par for the Course Tournament`,
+        `Location: Betsy’s Billiards (Austin, TX)`,
+        `Entry: $10 (paid at the room)`,
+        `Tables: 8-foot Diamond`,
+        `Format: Par for the Course – Tournament (18 holes, rotation)`,
+        "",
+        `Player: ${reg.name}`,
+        reg.phone ? `Mobile: ${reg.phone}` : "",
+        reg.note ? `Notes: ${reg.note}` : "",
+        "",
+        `Registration #: ${position}`,
+        "Check-in and start time are announced on-site."
+      ].filter(Boolean).join("\n");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const note = document.getElementById("note").value.trim();
+
+      const reg = {
+        name,
+        phone,
+        note,
+        submitted_at: new Date().toISOString()
+      };
+
+      const position = saveReg(reg);
+      lastConfirmationText = buildConfirmation(reg, position);
+
+      // Try to copy to clipboard for convenience (falls back gracefully).
+      try{
+        await navigator.clipboard.writeText(lastConfirmationText);
+        showToast("Saved + copied to clipboard. Paste it into a text or DM to confirm your spot.");
+      }catch{
+        showToast("Saved. Use “Copy Confirmation” to copy your registration details.");
+      }
+
+      form.reset();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      if(!lastConfirmationText){
+        showToast("Submit your registration first—then you can copy the confirmation.");
+        return;
+      }
+      try{
+        await navigator.clipboard.writeText(lastConfirmationText);
+        showToast("Copied to clipboard.");
+      }catch{
+        showToast("Couldn’t copy automatically. Your browser may block clipboard access.");
+      }
+    });
+  </script>
+</body>
 </html>
