@@ -593,13 +593,13 @@ const EMU={
   aimAngle:0,hasAimLine:false,isAiming:false,aimStart:null,dragBall:null,
   shotSpeed:5,angleFine:0,englishX:0,englishY:0,
   tableSpeed:'medium',equipment:'average',rails:'medium',
-  snapToGrid:true,moveCueBall:false,shotHistory:[],
+  snapToGrid:true,moveCueBall:false,showSettings:false,shotHistory:[],
   TW:100,TH:50,BR:1.125,PR:2.25,
   POCKETS:[{x:0,y:0},{x:50,y:0},{x:100,y:0},{x:0,y:50},{x:50,y:50},{x:100,y:50}],
-  ROLL_F:{slow:0.022,medium:0.016,fast:0.010},
-  SLIDE_F:{slow:0.28,medium:0.22,fast:0.18},
-  RAIL_R:{soft:0.6,medium:0.75,firm:0.9},
-  THROW_F:{dirty:0.06,average:0.035,clean:0.015},
+  ROLL_F:{slow:0.015,medium:0.010,fast:0.005},
+  SLIDE_F:{slow:0.30,medium:0.20,fast:0.15},
+  RAIL_R:{soft:0.55,medium:0.72,firm:0.85},
+  THROW_F:{dirty:0.050,average:0.035,clean:0.020},
   expandedSections:{},
   idCounter:0
 };
@@ -613,8 +613,8 @@ function initEmulator(){
   EMU.aimAngle=0;EMU.hasAimLine=false;EMU.isAiming=false;
   EMU.shotSpeed=5;EMU.angleFine=0;EMU.englishX=0;EMU.englishY=0;
   EMU.tableSpeed='medium';EMU.equipment='average';EMU.rails='medium';
-  EMU.snapToGrid=true;EMU.moveCueBall=false;EMU.shotHistory=[];
-  EMU.expandedSections={};
+  EMU.snapToGrid=true;EMU.moveCueBall=false;EMU.showSettings=false;EMU.shotHistory=[];
+  EMU.expandedSections={speed:true,english:true};
 }
 function emuSnapPos(x,y){
   if(!EMU.snapToGrid)return{x,y};
@@ -625,7 +625,7 @@ function emuSnapPos(x,y){
 }
 
 function emuSimulate(){
-  const DT=0.002,MAX=30000,THRESH=0.05,SPEED_SCALE=8,BB_REST=0.95,SQUIRT=0.006,CURVE=0.0004;
+  const DT=0.002,MAX=30000,THRESH=0.05,SPEED_SCALE=8,BB_REST=0.95,SQUIRT=0.005,SWERVE=0.00015,GG=386.4;
   const balls=EMU.balls.filter(b=>!b.pocketed).map(b=>({...b,pos:{...b.pos},vel:{...b.vel},spin:{...b.spin}}));
   const cue=balls.find(b=>b.type==='cue');
   if(!cue)return{trajectories:[],finalBalls:balls};
@@ -634,7 +634,13 @@ function emuSimulate(){
   const fAngle=totalAngle+squirtAngle;
   const spd=EMU.shotSpeed*SPEED_SCALE;
   cue.vel={x:Math.cos(fAngle)*spd,y:Math.sin(fAngle)*spd};
-  cue.spin={x:EMU.englishX*spd*0.3,y:EMU.englishY*spd*0.3};
+  const vd=vNorm(cue.vel);
+  const nrx=vd.x*spd,nry=vd.y*spd;
+  const sideMag=EMU.englishX*spd*0.25;
+  const px=-vd.y,py=vd.x;
+  const topDraw=-EMU.englishY;
+  const rollF=topDraw*0.6;
+  cue.spin={x:nrx*(1+rollF)+px*sideMag,y:nry*(1+rollF)+py*sideMag};
   const rFric=EMU.ROLL_F[EMU.tableSpeed],sFric=EMU.SLIDE_F[EMU.tableSpeed];
   const railR=EMU.RAIL_R[EMU.rails],throwF=EMU.THROW_F[EMU.equipment];
   const trajMap={};balls.forEach(b=>{trajMap[b.id]=[{x:b.pos.x,y:b.pos.y}];});
@@ -665,23 +671,52 @@ function emuSimulate(){
     }}
     for(const b of balls){
       if(b.pocketed)continue;
-      if(b.pos.x-EMU.BR<0){b.pos.x=EMU.BR;b.vel.x=Math.abs(b.vel.x)*railR;b.vel.y+=b.spin.y*0.3;b.spin.y*=0.6;}
-      if(b.pos.x+EMU.BR>EMU.TW){b.pos.x=EMU.TW-EMU.BR;b.vel.x=-Math.abs(b.vel.x)*railR;b.vel.y+=-b.spin.y*0.3;b.spin.y*=0.6;}
-      if(b.pos.y-EMU.BR<0){b.pos.y=EMU.BR;b.vel.y=Math.abs(b.vel.y)*railR;b.vel.x+=b.spin.x*0.3;b.spin.x*=0.6;}
-      if(b.pos.y+EMU.BR>EMU.TH){b.pos.y=EMU.TH-EMU.BR;b.vel.y=-Math.abs(b.vel.y)*railR;b.vel.x+=-b.spin.x*0.3;b.spin.x*=0.6;}
+      if(b.pos.x-EMU.BR<0){b.pos.x=EMU.BR;b.vel.x=Math.abs(b.vel.x)*railR;b.vel.y+=b.spin.y*0.15;b.spin.y*=0.7;}
+      if(b.pos.x+EMU.BR>EMU.TW){b.pos.x=EMU.TW-EMU.BR;b.vel.x=-Math.abs(b.vel.x)*railR;b.vel.y+=-b.spin.y*0.15;b.spin.y*=0.7;}
+      if(b.pos.y-EMU.BR<0){b.pos.y=EMU.BR;b.vel.y=Math.abs(b.vel.y)*railR;b.vel.x+=b.spin.x*0.15;b.spin.x*=0.7;}
+      if(b.pos.y+EMU.BR>EMU.TH){b.pos.y=EMU.TH-EMU.BR;b.vel.y=-Math.abs(b.vel.y)*railR;b.vel.x+=-b.spin.x*0.15;b.spin.x*=0.7;}
     }
     for(const b of balls){
       if(b.pocketed)continue;
-      const spd=vLen(b.vel);
-      if(spd<THRESH){b.vel={x:0,y:0};b.spin={x:0,y:0};continue;}
-      const sm=vLen(b.spin);const isSl=sm>spd*0.1;const fr=isSl?sFric:rFric;
-      const dec=fr*386.4*DT;const d=vNorm(b.vel);const ns=Math.max(0,spd-dec);
-      b.vel={x:d.x*ns,y:d.y*ns};
-      const sd=1-fr*2*DT;b.spin={x:b.spin.x*Math.max(0,sd),y:b.spin.y*Math.max(0,sd)};
-      if(b.type==='cue'&&vLen(b.spin)>0.01&&vLen(b.vel)>THRESH){
-        const vd=vNorm(b.vel);const px=-vd.y,py=vd.x;
-        const lf=b.spin.x*CURVE*vLen(b.vel);
-        b.vel.x+=px*lf*DT*100;b.vel.y+=py*lf*DT*100;
+      const sp=vLen(b.vel);
+      if(sp<THRESH*0.5&&vLen(b.spin)<THRESH*0.5){b.vel={x:0,y:0};b.spin={x:0,y:0};continue;}
+      if(sp<1e-10){const sd2=Math.max(0,1-sFric*3*DT);b.spin={x:b.spin.x*sd2,y:b.spin.y*sd2};continue;}
+      const vDir=vNorm(b.vel);
+      const nrSpinX=vDir.x*sp,nrSpinY=vDir.y*sp;
+      const relX=b.spin.x-nrSpinX,relY=b.spin.y-nrSpinY;
+      const relM=Math.sqrt(relX*relX+relY*relY);
+      if(relM>sp*0.05){
+        const slDec=sFric*GG*DT;
+        const slDir=relM>1e-10?{x:relX/relM,y:relY/relM}:{x:0,y:0};
+        b.vel.x+=-slDir.x*slDec*0.4;
+        b.vel.y+=-slDir.y*slDec*0.4;
+        const spinDR=sFric*5*DT;
+        const sp2=vLen(b.vel);const vd2=vNorm(b.vel);
+        const nr2x=vd2.x*sp2,nr2y=vd2.y*sp2;
+        const rel2x=b.spin.x-nrSpinX,rel2y=b.spin.y-nrSpinY;
+        const factor=Math.max(0,1-spinDR);
+        b.spin={x:nr2x+rel2x*factor,y:nr2y+rel2y*factor};
+      }else{
+        b.spin={x:vDir.x*sp,y:vDir.y*sp};
+        const rDec=rFric*GG*DT;
+        const newSp=Math.max(0,sp-rDec);
+        b.vel={x:vDir.x*newSp,y:vDir.y*newSp};
+        b.spin={x:vDir.x*newSp,y:vDir.y*newSp};
+      }
+      if(b.type==='cue'){
+        const csp=vLen(b.vel);
+        if(csp>THRESH){
+          const cvd=vNorm(b.vel);
+          const cnrx=cvd.x*csp,cnry=cvd.y*csp;
+          const crx=b.spin.x-cnrx,cry=b.spin.y-cnry;
+          const sideCmp=crx*cvd.y-cry*cvd.x;
+          if(Math.abs(sideCmp)>0.01){
+            const cpx=-cvd.y,cpy=cvd.x;
+            const swF=sideCmp*SWERVE;
+            b.vel.x+=cpx*swF*DT*100;
+            b.vel.y+=cpy*swF*DT*100;
+          }
+        }
       }
     }
     for(const b of balls){
@@ -717,7 +752,7 @@ function drawEmulatorCanvas(){
   ctx.fillStyle='#5a3825';ctx.fillRect(ox-rw,oy-rw,tw+rw*2,th+rw*2);
   ctx.fillStyle='#1a7a3a';ctx.fillRect(ox,oy,tw,th);
   if(EMU.snapToGrid){
-    ctx.strokeStyle='rgba(45,138,74,0.25)';ctx.lineWidth=0.5;ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(0,0,0,0.25)';ctx.lineWidth=1;ctx.setLineDash([]);
     const gx=EMU.TW/8,gy=EMU.TH/4;
     for(let i=1;i<8;i++){const p1=t2c(i*gx,0),p2=t2c(i*gx,EMU.TH);ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();}
     for(let j=1;j<4;j++){const p1=t2c(0,j*gy),p2=t2c(EMU.TW,j*gy);ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();}
@@ -833,6 +868,39 @@ function emuEngClick(e){
 }
 function emuToggleSection(s){EMU.expandedSections[s]=!EMU.expandedSections[s];render();}
 
+function emuGetCutAngle(){
+  if(!EMU.hasAimLine)return null;
+  const cue=EMU.balls.find(b=>b.type==='cue'&&!b.pocketed);
+  if(!cue)return null;
+  const totalAngle=EMU.aimAngle+(EMU.angleFine*Math.PI)/180;
+  const dirX=Math.cos(totalAngle),dirY=Math.sin(totalAngle);
+  const br2=EMU.BR*2;
+  let closestDist=Infinity,closestBall=null;
+  for(const b of EMU.balls){
+    if(b.type==='cue'||b.pocketed)continue;
+    const dx=b.pos.x-cue.pos.x,dy=b.pos.y-cue.pos.y;
+    const proj=dx*dirX+dy*dirY;
+    if(proj<=0)continue;
+    const px=dx-proj*dirX,py=dy-proj*dirY;
+    const pd=Math.sqrt(px*px+py*py);
+    if(pd<br2&&proj<closestDist){closestDist=proj;closestBall=b;}
+  }
+  if(!closestBall)return null;
+  const dx=closestBall.pos.x-cue.pos.x,dy=closestBall.pos.y-cue.pos.y;
+  const centerAngle=Math.atan2(dy,dx);
+  let cutAngle=Math.abs(totalAngle-centerAngle);
+  if(cutAngle>Math.PI)cutAngle=2*Math.PI-cutAngle;
+  const cutDeg=(cutAngle*180)/Math.PI;
+  const fullness=1-Math.sin(cutAngle);
+  let label;
+  if(fullness>=0.875)label='Full ball';
+  else if(fullness>=0.625)label='3/4 ball';
+  else if(fullness>=0.375)label='1/2 ball';
+  else if(fullness>=0.125)label='1/4 ball';
+  else label='Thin cut';
+  return{angle:Math.round(cutDeg*100)/100,label};
+}
+
 function rEmulator(){
   const selNotCue=EMU.selectedId&&EMU.selectedId!=='cue';
   const accStyle='cursor:pointer;padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-between;align-items:center;gap:4px;font-size:14px;font-weight:600';
@@ -862,42 +930,48 @@ function rEmulator(){
       <div style="display:flex;align-items:center;gap:4px">
         <button class="btn btn-primary" style="font-size:12px;min-height:32px" onclick="emuShoot()" ${EMU.hasAimLine?'':'disabled'} data-testid="button-shoot">${I.target||'⊕'} Shoot</button>
         ${EMU.shotHistory.length>0?`<button class="btn btn-outline" style="font-size:12px;min-height:32px" onclick="emuUndo();render();setTimeout(drawEmulatorCanvas,50)" data-testid="button-undo">${I.rotateCcw} Undo</button>`:''}
+        <button class="btn ${EMU.showSettings?'btn-primary':'btn-ghost'} btn-icon" onclick="EMU.showSettings=!EMU.showSettings;render();setTimeout(drawEmulatorCanvas,50)" data-testid="button-toggle-settings">${I.gear}</button>
         <button class="btn btn-ghost btn-icon" onclick="S.showEmulator=false;render()" data-testid="button-close-emulator">${I.x}</button>
       </div>
     </div>
-    <div style="flex:1;min-height:0;background:#1a1a2e;position:relative;touch-action:none" id="emu-canvas-wrap">
-      <canvas id="emu-canvas" style="width:100%;height:100%;display:block"
-        onmousedown="emuPointerDown(event)" onmousemove="emuPointerMove(event)" onmouseup="emuPointerUp()" onmouseleave="emuPointerUp()"
-        ontouchstart="emuPointerDown(event)" ontouchmove="emuPointerMove(event)" ontouchend="emuPointerUp()"
-        data-testid="canvas-table"></canvas>
-    </div>
-    <div style="border-top:1px solid var(--border);overflow-y:auto;max-height:40vh;padding:0 12px">
-      ${secHead('speed','Shot Speed: '+EMU.shotSpeed)}
-      ${EMU.expandedSections.speed?`<div style="${accContent}">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted-fg);margin-bottom:4px"><span>Soft</span><span>Power</span></div>
-        <input type="range" min="1" max="10" step="1" value="${EMU.shotSpeed}" oninput="EMU.shotSpeed=+this.value;drawEmulatorCanvas()" style="width:100%" data-testid="slider-speed">
-      </div>`:''}
-      ${secHead('angle','Fine-Tune Angle: '+(EMU.angleFine>0?'+':'')+EMU.angleFine.toFixed(1)+'°')}
-      ${EMU.expandedSections.angle?`<div style="${accContent}">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted-fg);margin-bottom:4px"><span>-5°</span><span>+5°</span></div>
-        <input type="range" min="-5" max="5" step="0.1" value="${EMU.angleFine}" oninput="EMU.angleFine=+(Math.round(+this.value*10)/10);drawEmulatorCanvas()" style="width:100%" data-testid="slider-angle">
-      </div>`:''}
-      ${secHead('english','English: H '+(EMU.englishX>0?'+':'')+EMU.englishX.toFixed(1)+', V '+(EMU.englishY>0?'+':'')+EMU.englishY.toFixed(1)+' tips')}
-      ${EMU.expandedSections.english?`<div style="${accContent}">
-        <div style="display:flex;gap:16px;align-items:flex-start">
-          <div onclick="emuEngClick(event)" style="width:120px;height:120px;position:relative;cursor:pointer;flex-shrink:0" data-testid="english-diagram">
-            <svg width="120" height="120" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="58" fill="white" stroke="#ccc" stroke-width="1"/>
-              <circle cx="60" cy="60" r="58" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>
-              <line x1="60" y1="2" x2="60" y2="118" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
-              <line x1="2" y1="60" x2="118" y2="60" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
-              ${[-1.5,-1.25,-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1,1.25,1.5].map(vx=>[-1.5,-1.25,-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1,1.25,1.5].map(vy=>`<circle cx="${60+(vx/1.5)*58}" cy="${60+(vy/1.5)*58}" r="1.5" fill="rgba(0,0,0,0.12)"/>`).join('')).join('')}
-              <circle cx="${engCx}" cy="${engCy}" r="${engTipR}" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="1.5"/>
-              <circle cx="${engCx}" cy="${engCy}" r="3" fill="#3b82f6"/>
-            </svg>
-            <span style="position:absolute;font-size:8px;bottom:-2px;right:0;opacity:0.6;color:var(--muted-fg)">miscue limit</span>
-          </div>
-          <div style="flex:1;min-width:0">
+    ${(()=>{const ci=emuGetCutAngle();return ci?`<div style="display:flex;align-items:center;gap:12px;padding:4px 12px;border-bottom:1px solid var(--border);background:var(--muted);font-size:14px" data-testid="cut-angle-info"><span style="color:var(--muted-fg)">Cut Angle:</span><span style="font-family:monospace;font-weight:bold" data-testid="text-cut-angle">${ci.angle.toFixed(2)}\u00B0</span><span style="color:var(--muted-fg)">(${ci.label})</span></div>`:''})()}
+    <div style="flex:1;min-height:0;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:#1a1a2e;touch-action:none" id="emu-canvas-wrap">
+        <canvas id="emu-canvas" style="width:100%;height:100%;display:block"
+          onmousedown="emuPointerDown(event)" onmousemove="emuPointerMove(event)" onmouseup="emuPointerUp()" onmouseleave="emuPointerUp()"
+          ontouchstart="emuPointerDown(event)" ontouchmove="emuPointerMove(event)" ontouchend="emuPointerUp()"
+          data-testid="canvas-table"></canvas>
+      </div>
+      <div style="position:absolute;top:0;right:0;bottom:0;width:280px;background:var(--bg);border-left:1px solid var(--border);overflow-y:auto;transition:transform .2s;z-index:10;transform:translateX(${EMU.showSettings?'0':'100%'})" data-testid="settings-sidebar">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid var(--border)">
+          <span class="font-bold" style="font-size:14px">Settings</span>
+          <button class="btn btn-ghost btn-icon" onclick="EMU.showSettings=false;render();setTimeout(drawEmulatorCanvas,50)" data-testid="button-close-settings">${I.x}</button>
+        </div>
+        <div style="padding:12px">
+          ${secHead('speed','Shot Speed: '+EMU.shotSpeed)}
+          ${EMU.expandedSections.speed?`<div style="${accContent}">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted-fg);margin-bottom:4px"><span>Soft</span><span>Power</span></div>
+            <input type="range" min="1" max="10" step="1" value="${EMU.shotSpeed}" oninput="EMU.shotSpeed=+this.value;drawEmulatorCanvas()" style="width:100%" data-testid="slider-speed">
+          </div>`:''}
+          ${secHead('angle','Fine-Tune Angle: '+(EMU.angleFine>0?'+':'')+EMU.angleFine.toFixed(1)+'°')}
+          ${EMU.expandedSections.angle?`<div style="${accContent}">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted-fg);margin-bottom:4px"><span>-5°</span><span>+5°</span></div>
+            <input type="range" min="-5" max="5" step="0.1" value="${EMU.angleFine}" oninput="EMU.angleFine=+(Math.round(+this.value*10)/10);drawEmulatorCanvas()" style="width:100%" data-testid="slider-angle">
+          </div>`:''}
+          ${secHead('english','English: H '+(EMU.englishX>0?'+':'')+EMU.englishX.toFixed(1)+', V '+(EMU.englishY>0?'+':'')+EMU.englishY.toFixed(1))}
+          ${EMU.expandedSections.english?`<div style="${accContent}">
+            <div onclick="emuEngClick(event)" style="width:120px;height:120px;position:relative;cursor:pointer;margin:0 auto 12px" data-testid="english-diagram">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="58" fill="white" stroke="#ccc" stroke-width="1"/>
+                <circle cx="60" cy="60" r="58" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>
+                <line x1="60" y1="2" x2="60" y2="118" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
+                <line x1="2" y1="60" x2="118" y2="60" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
+                ${[-1.5,-1.25,-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1,1.25,1.5].map(vx=>[-1.5,-1.25,-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1,1.25,1.5].map(vy=>`<circle cx="${60+(vx/1.5)*58}" cy="${60+(vy/1.5)*58}" r="1.5" fill="rgba(0,0,0,0.12)"/>`).join('')).join('')}
+                <circle cx="${engCx}" cy="${engCy}" r="${engTipR}" fill="rgba(59,130,246,0.25)" stroke="#3b82f6" stroke-width="1.5"/>
+                <circle cx="${engCx}" cy="${engCy}" r="3" fill="#3b82f6"/>
+              </svg>
+              <span style="position:absolute;font-size:8px;bottom:-2px;right:0;opacity:0.6;color:var(--muted-fg)">miscue limit</span>
+            </div>
             <div style="margin-bottom:8px">
               <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted-fg);margin-bottom:2px"><span>-1.5</span><span>0</span><span>+1.5</span></div>
               <input type="range" min="-1.5" max="1.5" step="0.05" value="${EMU.englishX}" oninput="EMU.englishX=+this.value;drawEmulatorCanvas()" style="width:100%" data-testid="slider-english-x">
@@ -909,15 +983,15 @@ function rEmulator(){
               <span style="font-size:11px;color:var(--muted-fg)">Vertical (top/draw)</span>
             </div>
             <button class="btn btn-ghost" style="font-size:12px" onclick="EMU.englishX=0;EMU.englishY=0;drawEmulatorCanvas();render()" data-testid="button-reset-english">Center</button>
-          </div>
+          </div>`:''}
+          ${secHead('physics','Table Physics')}
+          ${EMU.expandedSections.physics?`<div style="${accContent}">
+            <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Table Speed</span><div class="flex gap-1">${toggleBtn('tableSpeed','slow','Slow')}${toggleBtn('tableSpeed','medium','Medium')}${toggleBtn('tableSpeed','fast','Fast')}</div></div>
+            <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Equipment</span><div class="flex gap-1">${toggleBtn('equipment','dirty','Dirty')}${toggleBtn('equipment','average','Average')}${toggleBtn('equipment','clean','Clean')}</div></div>
+            <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Rails</span><div class="flex gap-1">${toggleBtn('rails','soft','Soft')}${toggleBtn('rails','medium','Medium')}${toggleBtn('rails','firm','Firm')}</div></div>
+          </div>`:''}
         </div>
-      </div>`:''}
-      ${secHead('physics','Table Physics')}
-      ${EMU.expandedSections.physics?`<div style="${accContent}">
-        <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Table Speed</span><div class="flex gap-1">${toggleBtn('tableSpeed','slow','Slow')}${toggleBtn('tableSpeed','medium','Medium')}${toggleBtn('tableSpeed','fast','Fast')}</div></div>
-        <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Equipment</span><div class="flex gap-1">${toggleBtn('equipment','dirty','Dirty')}${toggleBtn('equipment','average','Average')}${toggleBtn('equipment','clean','Clean')}</div></div>
-        <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Rails</span><div class="flex gap-1">${toggleBtn('rails','soft','Soft')}${toggleBtn('rails','medium','Medium')}${toggleBtn('rails','firm','Firm')}</div></div>
-      </div>`:''}
+      </div>
     </div>
   </div>`;
 }
