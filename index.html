@@ -186,6 +186,7 @@ let S = {
   showToolsMenu: false,
   showLeveler: false,
   showEmulator: false,
+  showEmulatorWarning: false,
   showLevelerTutorial: false,
   levelerTutorialIdx: 0,
 };
@@ -358,7 +359,7 @@ function rSplash(app){
         <div style="position:relative">
           <button class="btn btn-ghost btn-icon" onclick="S.showToolsMenu=!S.showToolsMenu;render()" data-testid="button-tools-menu">${I.wrench}</button>
           ${S.showToolsMenu?`<div class="tools-dropdown" data-testid="tools-dropdown">
-            <button onclick="S.showToolsMenu=false;S.showEmulator=true;initEmulator();render();setTimeout(drawEmulatorCanvas,50)" data-testid="button-cueing-emulator">${I.target||I.game} Cueing Emulator</button>
+            <button onclick="S.showToolsMenu=false;S.showEmulatorWarning=true;render()" data-testid="button-cueing-emulator">${I.target||I.game} Cueing Emulator</button>
             <button onclick="S.showToolsMenu=false;S.showLeveler=true;initLeveler();render()" data-testid="button-table-leveler">${I.game} Table Leveler</button>
           </div>`:''}
         </div>
@@ -369,7 +370,16 @@ function rSplash(app){
         <button class="btn btn-outline btn-xl" data-testid="button-load-game" onclick="S.screen='load';render()">Load Game</button>
         <button class="btn btn-ghost btn-xl" data-testid="button-how-to-play" onclick="S.showTutorial=true;S.tutorialIdx=0;render()">${I.book} How to Play</button>
       </div>
-    </div>${S.showTutorial?rTutorial():''}${S.showLeveler?rLeveler():''}${S.showEmulator?rEmulator():''}`;
+    </div>${S.showEmulatorWarning?`<div style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)" data-testid="dialog-emulator-warning">
+      <div style="background:var(--bg,#1a1a2e);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:32px;max-width:400px;width:90%;text-align:center">
+        <h1 style="font-size:1.5rem;font-weight:bold;margin:0 0 12px" data-testid="text-coming-soon">Coming Soon!</h1>
+        <h3 style="font-size:0.95rem;color:rgba(255,255,255,0.6);margin:0 0 24px;font-weight:normal;line-height:1.5" data-testid="text-warning-message">This feature is not fully developed and may not function properly or at all. Updates are published automatically on a regular basis.</h3>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button class="btn btn-ghost" onclick="S.showEmulatorWarning=false;render()" data-testid="button-go-back" style="min-width:100px">Go Back</button>
+          <button class="btn" onclick="S.showEmulatorWarning=false;S.showEmulator=true;initEmulator();render();setTimeout(drawEmulatorCanvas,50)" data-testid="button-continue-anyways" style="min-width:100px">Continue Anyways</button>
+        </div>
+      </div>
+    </div>`:''}${S.showTutorial?rTutorial():''}${S.showLeveler?rLeveler():''}${S.showEmulator?rEmulator():''}`;
   if(S.showToolsMenu){setTimeout(()=>document.addEventListener('click',closeToolsMenu,{once:true}),0);}
   if(S.showEmulator){setTimeout(drawEmulatorCanvas,50);}
 }
@@ -607,6 +617,44 @@ const EMU={
 function emuId(){return'eb'+(EMU.idCounter++);}
 function emuBall(id,type,x,y){return{id,type,pos:{x,y},vel:{x:0,y:0},spin:{x:0,y:0},pocketed:false};}
 
+const COURSE_PRESETS=[
+  {id:"2-01",par:2,balls:[{t:"stripe",x:50,y:2},{t:"stripe",x:50,y:48}]},
+  {id:"2-02",par:2,balls:[{t:"stripe",x:12.5,y:37.5},{t:"stripe",x:87.5,y:12.5}]},
+  {id:"2-03",par:2,balls:[{t:"stripe",x:87.5,y:37.5},{t:"stripe",x:62.5,y:12.5}]},
+  {id:"3-01",par:3,balls:[{t:"stripe",x:62.5,y:25},{t:"stripe",x:75,y:12.5},{t:"solid",x:87.5,y:12.5}]},
+  {id:"3-02",par:3,balls:[{t:"stripe",x:25,y:25},{t:"solid",x:50,y:25},{t:"stripe",x:75,y:25}]},
+  {id:"3-03",par:3,balls:[{t:"stripe",x:50,y:12.5},{t:"solid",x:50,y:25},{t:"stripe",x:50,y:37.5}]},
+  {id:"3-04",par:3,balls:[{t:"solid",x:75,y:25},{t:"stripe",x:87.5,y:2}]},
+  {id:"4-01",par:4,balls:[{t:"stripe",x:25,y:25},{t:"solid",x:50,y:12.5},{t:"solid",x:50,y:37.5},{t:"stripe",x:75,y:25}]},
+  {id:"4-02",par:4,balls:[{t:"solid",x:37.5,y:25},{t:"stripe",x:50,y:25},{t:"stripe",x:62.5,y:25},{t:"stripe",x:75,y:25}]},
+  {id:"4-03",par:4,balls:[{t:"stripe",x:25,y:25},{t:"stripe",x:62.5,y:12.5},{t:"solid",x:87.5,y:37.5}]},
+  {id:"4-04",par:4,balls:[{t:"stripe",x:37.5,y:37.5},{t:"stripe",x:50,y:25},{t:"stripe",x:75,y:12.5},{t:"solid",x:75,y:25}]},
+  {id:"4-05",par:4,balls:[{t:"solid",x:50,y:12.5},{t:"stripe",x:50,y:25},{t:"solid",x:50,y:37.5},{t:"stripe",x:62.5,y:12.5}]},
+  {id:"5-01",par:5,balls:[{t:"solid",x:62.5,y:12.5},{t:"solid",x:62.5,y:37.5},{t:"stripe",x:75,y:25},{t:"solid",x:87.5,y:2},{t:"solid",x:87.5,y:48}]},
+  {id:"5-02",par:5,balls:[{t:"solid",x:12.5,y:25},{t:"stripe",x:25,y:12.5},{t:"solid",x:25,y:25},{t:"stripe",x:25,y:37.5},{t:"solid",x:37.5,y:25}]},
+  {id:"5-03",par:5,balls:[{t:"stripe",x:25,y:12.5},{t:"stripe",x:25,y:37.5},{t:"solid",x:50,y:25},{t:"stripe",x:75,y:12.5},{t:"stripe",x:75,y:37.5}]},
+  {id:"6-01",par:6,balls:[{t:"stripe",x:2,y:2},{t:"stripe",x:2,y:48},{t:"stripe",x:50,y:2},{t:"stripe",x:50,y:48},{t:"stripe",x:98,y:2},{t:"stripe",x:98,y:48}]},
+];
+
+function findCuePos(presetBalls){
+  const dx=25,dy=25,br=1.125,md=br*3;
+  const occ=(cx,cy)=>presetBalls.some(b=>Math.abs(b.x-cx)<md&&Math.abs(b.y-cy)<md);
+  if(!occ(dx,dy))return{x:dx,y:dy};
+  const gx=[12.5,25,37.5,50,62.5,75,87.5],gy=[12.5,25,37.5];
+  let best={x:dx,y:dy},bd=Infinity;
+  for(const x of gx)for(const y of gy){if(occ(x,y))continue;const d=Math.hypot(x-dx,y-dy);if(d<bd){bd=d;best={x,y};}}
+  return best;
+}
+
+function loadCoursePreset(id){
+  const preset=COURSE_PRESETS.find(p=>p.id===id);
+  if(!preset)return;
+  const cp=findCuePos(preset.balls);
+  EMU.balls=[emuBall('cue','cue',cp.x,cp.y),...preset.balls.map((b,i)=>emuBall(id+'-'+b.t+'-'+i,b.t,b.x,b.y))];
+  EMU.selectedId=null;EMU.trajectories=[];EMU.hasAimLine=false;EMU.shotHistory=[];EMU.preShotBalls=null;
+  render();setTimeout(drawEmulatorCanvas,50);
+}
+
 function initEmulator(){
   EMU.balls=[emuBall('cue','cue',25,25)];
   EMU.preShotBalls=null;EMU.selectedId=null;EMU.trajectories=[];
@@ -682,21 +730,20 @@ function emuSimulate(){
       if(b.pocketed)continue;
       const sp=vLen(b.vel);
       if(sp<THRESH*0.5&&vLen(b.spin)<THRESH*0.5){b.vel={x:0,y:0};b.spin={x:0,y:0};continue;}
-      if(sp<1e-10){const sd2=Math.max(0,1-sFric*3*DT);b.spin={x:b.spin.x*sd2,y:b.spin.y*sd2};continue;}
-      const vDir=vNorm(b.vel);
-      const nrSpinX=vDir.x*sp,nrSpinY=vDir.y*sp;
-      const relX=b.spin.x-nrSpinX,relY=b.spin.y-nrSpinY;
-      const relM=Math.sqrt(relX*relX+relY*relY);
-      if(relM>sp*0.05){
-        const slDec=(5/7)*sFric*GG*DT;
-        const newSp=Math.max(0,sp-slDec);
-        b.vel={x:vDir.x*newSp,y:vDir.y*newSp};
-        const spinCR=sFric*100*DT;
-        const nrNew={x:vDir.x*newSp,y:vDir.y*newSp};
-        const factor=Math.max(0,1-spinCR);
-        b.spin={x:nrNew.x+relX*factor,y:nrNew.y+relY*factor};
+      const spnM=vLen(b.spin);
+      const slpX=b.spin.x-b.vel.x,slpY=b.spin.y-b.vel.y;
+      const slpM=Math.sqrt(slpX*slpX+slpY*slpY);
+      if(slpM>THRESH*0.1){
+        const slpD=slpM>1e-10?{x:slpX/slpM,y:slpY/slpM}:{x:0,y:0};
+        const fa=sFric*GG*DT;
+        const vd=Math.min(fa,slpM*(2/7));
+        b.vel.x+=slpD.x*vd;b.vel.y+=slpD.y*vd;
+        const sd=Math.min(fa*2.5,slpM*(5/7));
+        b.spin.x-=slpD.x*sd;b.spin.y-=slpD.y*sd;
       }else{
-        b.spin={x:vDir.x*sp,y:vDir.y*sp};
+        if(sp<1e-10){b.vel={x:0,y:0};b.spin={x:0,y:0};continue;}
+        const vDir=vNorm(b.vel);
+        b.spin={x:b.vel.x,y:b.vel.y};
         const rDec=rFric*GG*DT;
         const newSp=Math.max(0,sp-rDec);
         b.vel={x:vDir.x*newSp,y:vDir.y*newSp};
@@ -988,6 +1035,14 @@ function rEmulator(){
             <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Table Speed</span><div class="flex gap-1">${toggleBtn('tableSpeed','slow','Slow')}${toggleBtn('tableSpeed','medium','Medium')}${toggleBtn('tableSpeed','fast','Fast')}</div></div>
             <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Equipment</span><div class="flex gap-1">${toggleBtn('equipment','dirty','Dirty')}${toggleBtn('equipment','average','Average')}${toggleBtn('equipment','clean','Clean')}</div></div>
             <div style="margin-bottom:8px"><span style="font-size:11px;color:var(--muted-fg);display:block;margin-bottom:4px">Rails</span><div class="flex gap-1">${toggleBtn('rails','soft','Soft')}${toggleBtn('rails','medium','Medium')}${toggleBtn('rails','firm','Firm')}</div></div>
+          </div>`:''}
+          ${secHead('presets','Course Layouts')}
+          ${EMU.expandedSections.presets?`<div style="${accContent};max-height:200px;overflow-y:auto">
+            ${[2,3,4,5,6].map(par=>{
+              const grp=COURSE_PRESETS.filter(p=>p.par===par);
+              if(!grp.length)return'';
+              return`<div><span style="font-size:11px;color:var(--muted-fg);display:block;margin:8px 0 4px">Par ${par}</span><div class="flex gap-1" style="flex-wrap:wrap">${grp.map(p=>`<button class="btn btn-ghost" style="font-size:11px;padding:2px 8px" data-testid="button-preset-${p.id}" onclick="loadCoursePreset('${p.id}')">${p.id}</button>`).join('')}</div></div>`;
+            }).join('')}
           </div>`:''}
         </div>
       </div>
